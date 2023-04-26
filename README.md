@@ -1,7 +1,7 @@
 # hyperenable
-This app allows hotkeys normally controlled by Windows to be freely rebound. In particular, the hyper key (i.e. Office key, or `ctrl+shift+alt+win`). It does this by squatting hotkeys.
+**hyperenable allows `ctrl+shift+alt+win` (i.e. the Office key, or the hyper key), which is normally reserved by Windows, to be freely rebound.**
 
-This app starts before `explorer.exe`, pre-emptively binds the normally Windows-controlled hotkeys, waits for `explorer.exe` to try (and fail) to bind the now-occupied hotkeys, then unbinds the hotkeys again, letting them to be freely reused.
+hyperenable does this by squatting on the affected hotkeys. `hyperenable.exe` starts before `explorer.exe` and pre-emptively registers the hotkeys for itself. Now `explorer.exe` starts, and fails to register the already-occupied hotkeys. hyperenable then unregisters the hotkeys again, letting them be freely reused.
 
 ## Installing
   1. Put `hyperenable.exe` somewhere in your system.
