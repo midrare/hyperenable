@@ -17,7 +17,7 @@ public:
 
     Listener(const Listener& other) = delete;
     Listener(Listener&& other) noexcept
-        : thread(other.thread), received(other.received) {
+        : thread(std::move(other.thread)), received(std::move(other.received)) {
         other.thread = nullptr;
         other.received = nullptr;
     };
@@ -44,7 +44,8 @@ private:
     Listener() = default;
 
     std::shared_ptr<std::jthread> thread = nullptr;
-    std::shared_ptr<std::atomic_bool> received = std::make_shared<std::atomic_bool>(false);
+    std::shared_ptr<std::atomic_bool> received =
+        std::make_shared<std::atomic_bool>(false);
 };
 
 class Server {
@@ -85,8 +86,7 @@ public:
     Client() = default;
 
     Client(const Client& other) = delete;
-    Client(Client&& other) noexcept {
-        pipe = other.pipe;
+    Client(Client&& other) noexcept : pipe(other.pipe) {
         other.pipe = INVALID_HANDLE_VALUE;
     }
 

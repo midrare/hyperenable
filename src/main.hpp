@@ -2,6 +2,8 @@
 #define H9138789750
 
 #include <deque>
+#include <filesystem>
+#include <optional>
 
 // windows.h must come first
 #include <windows.h>

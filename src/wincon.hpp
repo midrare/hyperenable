@@ -3,12 +3,9 @@
 
 #include <cstdio>
 
-// windows.h must come before other windows headers
-#include <windows.h>
-
 class WinConsole {
-  public:
-    WinConsole(WinConsole &&old) noexcept
+public:
+    WinConsole(WinConsole&& old) noexcept
         : attached(old.attached), stdin_(old.stdin_), stdout_(old.stdout_),
           stderr_(old.stderr_) {
         old.stdin_ = nullptr;
@@ -17,17 +14,19 @@ class WinConsole {
         old.attached = false;
     }
 
-    WinConsole(const WinConsole &) = delete;
+    WinConsole(const WinConsole&) = delete;
     ~WinConsole() { this->detach_console(); }
 
-    auto operator=(const WinConsole &) = delete;
-    auto operator=(WinConsole &) -> WinConsole & = delete;
-    auto operator=(WinConsole &&) -> WinConsole & = delete;
+    auto operator=(const WinConsole&) = delete;
+    auto operator=(WinConsole&) -> WinConsole& = delete;
+    auto operator=(WinConsole&&) -> WinConsole& = delete;
 
     // static "constructor" to make it more obvious this is RAII
-    [[maybe_unused]] static auto attach() -> WinConsole { return {}; }
+    [[nodiscard]] [[maybe_unused]] static auto attach() -> WinConsole {
+        return {};
+    }
 
-  private:
+private:
     bool attached = false;
 
     FILE* stdin_ = nullptr;
@@ -39,6 +38,5 @@ class WinConsole {
     void attach_console();
     void detach_console();
 };
-
 
 #endif // H5412315995

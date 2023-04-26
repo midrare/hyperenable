@@ -13,7 +13,7 @@
 
 
 constexpr LPCSTR pipe_name = R"(\\.\pipe\e3f5a607-ec52-4841-886d-9502cf837302)";
-constexpr char cmd_stop = 0xff;  // arbitrary value
+constexpr char cmd_stop = 0x01;  // arbitrary value
 
 
 auto Listener::create() -> std::optional<Listener> {
@@ -26,6 +26,7 @@ auto Listener::create() -> std::optional<Listener> {
     auto received = listener->received;
 
     listener->thread = std::make_shared<std::jthread>(
+        // NOLINTNEXTLINE(performance-unnecessary-value-param)
         std::jthread([server, received] (const std::stop_token stop) {
         while (!stop.stop_requested()) {
             if (server->poll()) {
@@ -48,7 +49,7 @@ auto Server::init() -> bool {
         return true;
     }
 
-    auto existing = CreateFileA(pipe_name,
+    HANDLE existing = CreateFileA(pipe_name,
         GENERIC_READ | GENERIC_WRITE, 0, NULL,
         OPEN_EXISTING, 0, NULL);
     if (existing != INVALID_HANDLE_VALUE) {
@@ -125,7 +126,7 @@ auto Client::notify() -> bool {
     }
 
     DWORD bytes_written = 0;
-    std::array<char, bufsize + 1> buf;
+    std::array<char, bufsize + 1> buf = {};
     buf[bufsize] = '\0';
 
     buf[0] = cmd_stop;
