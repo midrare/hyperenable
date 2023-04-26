@@ -23,4 +23,6 @@ Checks: >
     -readability-identifier-length,
     -used-but-marked-unused,
     -modernize-use-nullptr,
+    -cppcoreguidelines-pro-type-cstyle-cast,
+    -performance-no-int-to-ptr,
 HeaderFilterRegex: "(^[\\/]*|.*[\\/]+)([^\\/]*(common|logging)[^\\/]*)([\\/]*$|[\\/]+.*)"
