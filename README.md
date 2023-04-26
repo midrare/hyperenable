@@ -6,7 +6,7 @@ hyperenable does this by squatting on the affected hotkeys. `hyperenable.exe` st
 ## Installing
   1. Put `hyperenable.exe` somewhere in your system.
   2. Open `regedit.exe`. Go to `HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon` and edit the `Userinit` value. Prepend (not append!) `C:\path\to\hyperenable.exe`. This lets `hyperenable.exe` start before `explorer.exe`. **Be careful with the comma delimiters. Make sure you get this right, or Windows will not start properly.**
-  3. Open an `explorer.exe` window. Go to `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\` and create a shortcut to `C:\path\to\hyperenable.exe`. Right-click the shortcut and click "properties". In the "target" field of the shortcut, add the `--release` argument.
+  3. Open an `explorer.exe` window. Go to `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\` and create a shortcut to `C:\path\to\hyperenable.exe`. Right-click the shortcut and open "properties". Open the "shortcut" tab. In the "target" field, add `--release`. The entire "target" field should look like this: `"C:\path\to\hyperenable.exe" --release`.
   4. Open `regedit.exe`. Go to `HKEY_LOCAL_MACHINE\Software\Classes\ms-officeapp\Shell\Open\Command` and edit the default (unnamed) value. (If the key doesn't exist, create it.) Set the default value to `rundll32`. You need this because, in addition to counting as a key modifier, `ctrl+shift+alt+win` also counts as a key press. This disables the key press.
 
 ## Building
