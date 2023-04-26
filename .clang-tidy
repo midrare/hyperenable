@@ -1,0 +1,26 @@
+UseColor: true
+# NOTE Make sure all checks have trailing commas!
+Checks: >
+    bugprone-*,
+    clang-analyzer-*,
+    cppcoreguidelines-*,
+    google-*,
+    hicpp-*,
+    modernize-*,
+    performance-*,
+    portability-*,
+    readability-*,
+    -bugprone-easily-swappable-parameters,
+    -cppcoreguidelines-macro-usage,
+    -google-readability-todo,
+    -google-runtime-references
+    -hicpp-avoid-c-arrays,
+    -hicpp-exception-baseclass,
+    -hicpp-signed-bitwise,
+    -readability-avoid-const-params-in-decls,
+    -readability-convert-member-functions-to-static,
+    -readability-function-cognitive-complexity,
+    -readability-identifier-length,
+    -used-but-marked-unused,
+    -modernize-use-nullptr,
+HeaderFilterRegex: "(^[\\/]*|.*[\\/]+)([^\\/]*(common|logging)[^\\/]*)([\\/]*$|[\\/]+.*)"

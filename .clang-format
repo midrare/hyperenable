@@ -1,0 +1,29 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: AlwaysBreak
+AllowAllParametersOfDeclarationOnNextLine: true
+AlignArrayOfStructures: Right
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeTernaryOperators: true
+BreakStringLiterals: true
+ColumnLimit: 80
+CompactNamespaces: false
+Cpp11BracedListStyle: true
+IndentWidth: 4
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+DerivePointerAlignment: false
+PointerAlignment: Left
+---
+Language: JavaScript
+BasedOnStyle: Google
+ColumnLimit: 80
+---
+Language: Json
+ColumnLimit: 80
+---

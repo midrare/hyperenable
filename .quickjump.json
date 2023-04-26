@@ -1,0 +1,22 @@
+[
+    {
+        "source": "{filename}",
+        "pattern": "(.+?)\\.c",
+        "targets": { "header": [ "{$1}.h" ]}
+    },
+    {
+        "source": "{filename}",
+        "pattern": "(.+?)\\.(cpp|cxx)",
+        "targets": { "header": [ "{$1}.hpp", "{$1}.hxx" ]}
+    },
+    {
+        "source": "{filename}",
+        "pattern": "(.+?)\\.h",
+        "targets": { "source": [ "{$1}.c", "{$1}.cpp", "{$1}.cxx" ]}
+    },
+    {
+        "source": "{filename}",
+        "pattern": "(.+?)\\.(hpp|hxx)",
+        "targets": { "source": [ "{$1}.cpp", "{$1}.cxx" ]}
+    }
+]
