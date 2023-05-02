@@ -16,6 +16,7 @@
 #include "argparse.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
+#include "yaml.hpp"
 #include "wincon.hpp"
 
 const std::string program_name = "hyperenable";
