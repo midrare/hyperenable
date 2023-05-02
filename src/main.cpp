@@ -13,7 +13,7 @@
 #include <handleapi.h>
 #include <winuser.h>
 
-#include "args.hxx"
+#include "argparse.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
 #include "wincon.hpp"
@@ -111,14 +111,15 @@ auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
 
 auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
     -> int {
-    DWORD waited_ms = 0;
+    int waited_ms = 0;
     HWND explorer = NULL;
 
     do {
         explorer = FindWindow(win, NULL);
         if (explorer == NULL) {
-            Sleep(max(0, min(interval_ms, timeout_ms - waited_ms)));
-            waited_ms += interval_ms;
+            auto wait_ms = min(interval_ms, timeout_ms - waited_ms);
+            Sleep(max(0, wait_ms));
+            waited_ms += wait_ms;
         }
     } while (explorer == NULL && (timeout_ms < 0 || waited_ms < timeout_ms));
 
@@ -147,44 +148,45 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
     return min((std::numeric_limits<int>::max)(), waited_ms);
 }
 
-auto main(int argc, char* argv[]) -> int {
-    args::ArgumentParser argparser("Blocks explorer.exe from "
-                                   "registering certain hotkeys.",
-                                "The -r parameter is can be used to run "
-                                "a hotkey setup program. This makes it "
-                                "easy to time its execution until after this "
-                                "program has made sure it's safe.");
-    args::HelpFlag arg_help(argparser, "help", "show usage message", {'h', "help"});
-    args::CompletionFlag arg_completion(argparser, {"complete"});
-    args::ValueFlag<int> arg_timeout(argparser, "timeout",
-                                 "max time to wait for explorer.exe to load."
-                                 " in milliseconds. negative for infinite",
-                                 {'t', "timeout"});
-
-    args::ValueFlag<int> arg_delay(argparser, "delay",
-        "wait a while after explorer.exe is active before releasing "
-              "keybinds. in milliseconds", {"delay"}, delay_ms);
-
-    args::ValueFlag<std::filesystem::path> arg_run(argparser, "run",
-                                           "run a program after this one terminates",
-                                           {'r', "run"});
-
-    args::Flag arg_release(argparser, "release", "release keybinds", {"release"});
+auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
+    argparse::ArgumentParser program(program_name, program_version);
+    program.add_argument("-t", "--timeout")
+        .help("max time to wait for explorer.exe to load. in milliseconds. "
+              "negative for infinite")
+        .default_value(timeout_ms)
+        .scan<'i', int>()
+        .metavar("INT");
+    program.add_argument("--delay")
+        .help("wait a while after explorer.exe is active before releasing "
+              "keybinds. in milliseconds")
+        .default_value(delay_ms)
+        .scan<'i', int>()
+        .metavar("INT");
+    program.add_argument("-r", "--run")
+        .help("run a program after this one terminates")
+        .metavar("PATH");
+    program.add_argument("--release")
+        .help("release keybinds")
+        .implicit_value(true)
+        .default_value(false);
+    program.add_epilog("The -r parameter is can be used to run "
+                       "a hotkey setup program. This makes it easy to "
+                       "time its execution until after this program "
+                       "has made sure it's safe.");
 
     try {
-        argparser.ParseCLI(argc, argv);
-    } catch (const args::Completion&e) {
-        std::cout << e.what() << std::endl;
-        std::exit(0);
-    } catch (const args::Help& ignored) {
-        std::cout << argparser << std::endl;
-        std::exit(0);
-    } catch (const args::ParseError& e) {
-        std::cerr << e.what() << std::endl;
-        std::exit(exit_argparse);
+        program.parse_args(argc, argv);
+    } catch (const std::runtime_error& err) {
+        std::cerr << err.what() << std::endl;
+        std::exit(1);
     }
 
-    if (args::get(arg_release)) {
+    return program;
+}
+
+auto main(int argc, char* argv[]) -> int {
+    auto args = parse_args(argc, argv);
+    if (args.get<bool>("--release")) {
         auto client = Client();
         if (!client.init()) {
             std::cout << "Not blocking; no need to release." << std::endl;
@@ -216,9 +218,10 @@ auto main(int argc, char* argv[]) -> int {
         return exit_ok;
     }
 
+
     std::cout << "Blocking keybinds." << std::endl;
     auto blocker = Squatter::block();
-    auto timeout_ms = args::get(arg_timeout);
+    auto timeout_ms = args.get<int>("--timeout");
 
     std::cout << "Waiting for explorer.exe" << std::endl;
     auto waited_ms = wait_until_window(window_desktop, timeout_ms);
@@ -233,7 +236,7 @@ auto main(int argc, char* argv[]) -> int {
         waited_ms += interval_ms;
     }
 
-    auto delay_ms = args::get(arg_delay);
+    auto delay_ms = args.get<int>("--delay");
     if (delay_ms > 0) {
         std::cout << "Delaying." << std::endl;
         Sleep(delay_ms);
@@ -242,10 +245,10 @@ auto main(int argc, char* argv[]) -> int {
     std::cout << "Unblocking keybinds." << std::endl;
     blocker.unblock();
 
-    if (!args::get(arg_run).empty()) {
-        std::filesystem::path path = args::get(arg_run);
+    if (!args.get("run").empty()) {
+        std::filesystem::path path = args.get("run");
         if (!std::filesystem::exists(path)) {
-            std::cerr << "File not found at \"" << args::get(arg_run) << "\""
+            std::cerr << "File not found at \"" << args.get("run") << "\""
                       << std::endl;
             return exit_file_not_found;
         }
