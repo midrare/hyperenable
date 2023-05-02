@@ -32,7 +32,7 @@ constexpr UINT vk_digit_end = 0x3a;
 constexpr UINT vk_alpha_begin = 0x41;
 constexpr UINT vk_alpha_end = 0x5b;
 
-constexpr int timeout_ms = 60000;
+constexpr int timeout_ms = 15000;
 constexpr int bufsize = 1024;
 constexpr int interval_ms = 100;
 constexpr int delay_ms = 0;
