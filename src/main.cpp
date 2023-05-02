@@ -23,7 +23,7 @@
 #include "yaml.hpp"
 
 const std::string program_name = "hyperenable";
-const std::string program_version = "0.1.1";
+const std::string program_version = "0.1.2";
 
 const LPCSTR window_taskbar = "Shell_TrayWnd";
 
