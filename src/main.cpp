@@ -119,7 +119,6 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
     return min((std::numeric_limits<int>::max)(), waited_ms);
 }
 
-
 auto main(int argc, char* argv[]) -> int {
     argparse::ArgumentParser args_start(action_start);
     args_start.add_description("Block keybind registration attempts");
@@ -140,9 +139,12 @@ auto main(int argc, char* argv[]) -> int {
 
     argparse::ArgumentParser args_stop(action_stop);
     args_stop.add_description("Unblock keybind registration attempts");
-    args_stop.add_epilog("A signal will be sent to a running "
-                         "instance of " + program_name + " to stop "
-                         "blocking keybinds.");
+    args_stop.add_epilog(
+        "A signal will be sent to a running "
+        "instance of " +
+        program_name +
+        " to stop "
+        "blocking keybinds.");
 
     argparse::ArgumentParser args(program_name, program_version);
     args.add_subparser(args_start);
@@ -165,10 +167,8 @@ auto main(int argc, char* argv[]) -> int {
 
         auto server = Listener::create();
         if (!server) {
-            std::cout
-                << "Another instance is already blocking. "
-                << "No need to block again."
-                << std::endl;
+            std::cout << "Another instance is already blocking. "
+                      << "No need to block again." << std::endl;
             return exit_ok;
         }
 
@@ -180,7 +180,7 @@ auto main(int argc, char* argv[]) -> int {
         auto waited_ms = wait_until_window(window_desktop, timeout_ms);
         if (waited_ms < 0) {
             std::cerr << "Timed out while waiting for explorer.exe."
-                << std::endl;
+                      << std::endl;
             return exit_timeout;
         }
 
@@ -196,9 +196,8 @@ auto main(int argc, char* argv[]) -> int {
         if (!args_start.get("--run").empty()) {
             std::filesystem::path path = args_start.get("--run");
             if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \""
-                    << args_start.get("--run") << "\""
-                    << std::endl;
+                std::cerr << "File not found at \"" << args_start.get("--run")
+                          << "\"" << std::endl;
                 return exit_file_not_found;
             }
 
