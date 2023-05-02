@@ -13,7 +13,7 @@ Checks: >
     -bugprone-easily-swappable-parameters,
     -cppcoreguidelines-macro-usage,
     -google-readability-todo,
-    -google-runtime-references
+    -google-runtime-references,
     -hicpp-avoid-c-arrays,
     -hicpp-exception-baseclass,
     -hicpp-signed-bitwise,
