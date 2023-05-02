@@ -119,45 +119,95 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
     return min((std::numeric_limits<int>::max)(), waited_ms);
 }
 
-auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
-    argparse::ArgumentParser program(program_name, program_version);
-    program.add_argument("action")
-        .default_value(action_start)
-        .help("one of " + action_start + " or " + action_stop)
-        .action([](const std::string& value) {
-            static const std::vector<std::string> actions = {
-                action_start, action_stop};
-            if (std::find(actions.begin(), actions.end(), value) !=
-                actions.end()) {
-                return value;
-            }
-            throw std::runtime_error("Unrecognized action \"" + value + "\"");
-        });
 
-    program.add_argument("-t", "--timeout")
+auto main(int argc, char* argv[]) -> int {
+    argparse::ArgumentParser args_start(action_start);
+    args_start.add_description("Block keybind registration attempts");
+    args_start.add_argument("-t", "--timeout")
         .help("max milliseconds to wait for explorer.exe to load. "
               "negative for infinite")
         .default_value(timeout_ms)
         .scan<'i', int>()
         .metavar("INT");
-    program.add_argument("-r", "--run")
-        .help("run a program after keybinds are released. can "
+    args_start.add_argument("-r", "--run")
+        .help("run a program afterwards. can "
               "be used to run a hotkey setup app")
         .metavar("FILE");
+    args_start.add_epilog("Keybind registration attempts will be "
+                          "blocked until terminated, timeout elapses, "
+                          "or stop signal is received, whichever happens "
+                          "first.");
+
+    argparse::ArgumentParser args_stop(action_stop);
+    args_stop.add_description("Unblock keybind registration attempts");
+    args_stop.add_epilog("A signal will be sent to a running "
+                         "instance of " + program_name + " to stop "
+                         "blocking keybinds.");
+
+    argparse::ArgumentParser args(program_name, program_version);
+    args.add_subparser(args_start);
+    args.add_subparser(args_stop);
 
     try {
-        program.parse_args(argc, argv);
+        args.parse_args(argc, argv);
     } catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
-        std::exit(1);
+        return exit_argparse;
     }
 
-    return program;
-}
+    if (args.is_subcommand_used(args_start)) {
+        if (is_window_active(window_desktop)) {
+            std::cerr << "Can only block before explorer.exe "
+                         "is active."
+                      << std::endl;
+            return exit_explorer_exists;
+        }
 
-auto main(int argc, char* argv[]) -> int {
-    auto args = parse_args(argc, argv);
-    if (args.get("action") == action_stop) {
+        auto server = Listener::create();
+        if (!server) {
+            std::cout
+                << "Another instance is already blocking. "
+                << "No need to block again."
+                << std::endl;
+            return exit_ok;
+        }
+
+        std::cout << "Blocking keybinds." << std::endl;
+        auto blocker = Squatter::block();
+        auto timeout_ms = args_start.get<int>("--timeout");
+
+        std::cout << "Waiting for explorer.exe" << std::endl;
+        auto waited_ms = wait_until_window(window_desktop, timeout_ms);
+        if (waited_ms < 0) {
+            std::cerr << "Timed out while waiting for explorer.exe."
+                << std::endl;
+            return exit_timeout;
+        }
+
+        std::cout << "Waiting until release signal or timeout." << std::endl;
+        while (waited_ms < timeout_ms && !server->poll()) {
+            Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
+            waited_ms += interval_ms;
+        }
+
+        std::cout << "Unblocking keybinds." << std::endl;
+        blocker.unblock();
+
+        if (!args_start.get("--run").empty()) {
+            std::filesystem::path path = args_start.get("--run");
+            if (!std::filesystem::exists(path)) {
+                std::cerr << "File not found at \""
+                    << args_start.get("--run") << "\""
+                    << std::endl;
+                return exit_file_not_found;
+            }
+
+            std::cout << "Running program at " << path << std::endl;
+            auto runner = Process::run(path);
+        }
+
+        return exit_ok;
+    } else if (args.is_subcommand_used(args_stop)) {
         auto client = Client();
         if (!client.init()) {
             std::cout << "Not blocking; no need to release." << std::endl;
@@ -172,56 +222,10 @@ auto main(int argc, char* argv[]) -> int {
         }
 
         return exit_ok;
+    } else {
+        std::cerr << "Unrecognized subcommand." << std::endl;
+        return exit_argparse;
     }
-
-    if (is_window_active(window_desktop)) {
-        std::cerr << "Can only block before explorer.exe "
-                     "is active."
-                  << std::endl;
-        return exit_explorer_exists;
-    }
-
-    auto server = Listener::create();
-    if (!server) {
-        std::cout
-            << "Another instance is already blocking. No need to block again."
-            << std::endl;
-        return exit_ok;
-    }
-
-    std::cout << "Blocking keybinds." << std::endl;
-    auto blocker = Squatter::block();
-    auto timeout_ms = args.get<int>("--timeout");
-
-    std::cout << "Waiting for explorer.exe" << std::endl;
-    auto waited_ms = wait_until_window(window_desktop, timeout_ms);
-    if (waited_ms < 0) {
-        std::cerr << "Timed out while waiting for explorer.exe." << std::endl;
-        return exit_timeout;
-    }
-
-    std::cout << "Waiting until release signal or timeout." << std::endl;
-    while (waited_ms < timeout_ms && !server->poll()) {
-        Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
-        waited_ms += interval_ms;
-    }
-
-    std::cout << "Unblocking keybinds." << std::endl;
-    blocker.unblock();
-
-    if (!args.get("--run").empty()) {
-        std::filesystem::path path = args.get("--run");
-        if (!std::filesystem::exists(path)) {
-            std::cerr << "File not found at \"" << args.get("--run") << "\""
-                      << std::endl;
-            return exit_file_not_found;
-        }
-
-        std::cout << "Running program at " << path << std::endl;
-        auto runner = Process::run(path);
-    }
-
-    return exit_ok;
 }
 
 _Use_decl_annotations_ auto WINAPI WinMain(
