@@ -18,8 +18,8 @@
 /.idea/code-comments.xml
 _generated/
 
-# Created by https://www.toptal.com/developers/gitignore/api/c,c++,vim,tags,cmake,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
-# Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,vim,tags,cmake,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
+# Created by https://www.toptal.com/developers/gitignore/api/c,c++,vim,tags,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
+# Edit at https://www.toptal.com/developers/gitignore?templates=c,c++,vim,tags,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
 
 ### C ###
 # Prerequisites
@@ -206,23 +206,6 @@ fabric.properties
 # Azure Toolkit for IntelliJ plugin
 # https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij
 .idea/**/azureSettings.xml
-
-### CMake ###
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-
-### CMake Patch ###
-# External projects
-*-prefix/
 
 ### Conan ###
 # Conan build information
@@ -539,6 +522,8 @@ cscope.po.out
 
 ### vcpkg ###
 # Vcpkg
+
+vcpkg-manifest-install.log
 
 ## Manifest Mode
 vcpkg_installed/
@@ -991,4 +976,4 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
-# End of https://www.toptal.com/developers/gitignore/api/c,c++,vim,tags,cmake,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
+# End of https://www.toptal.com/developers/gitignore/api/c,c++,vim,tags,conan,emacs,linux,macos,vcpkg,eclipse,windows,intellij,sublimetext,visualstudio,visualstudiocode,clion
