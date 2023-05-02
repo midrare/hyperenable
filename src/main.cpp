@@ -32,7 +32,6 @@ const LPCSTR window_desktop = "Progman";
 
 const std::string action_start = "start";
 const std::string action_stop = "stop";
-const std::string action_status = "status";
 
 constexpr UINT vk_digit_begin = 0x30;
 constexpr UINT vk_digit_end = 0x3a;
@@ -159,11 +158,10 @@ auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
     argparse::ArgumentParser program(program_name, program_version);
     program.add_argument("action")
         .default_value(action_start)
-        .help("one of " + action_start + ", " + action_stop
-              + ", or " + action_status)
+        .help("one of " + action_start + " or " + action_stop)
         .action([](const std::string& value) {
             static const std::vector<std::string> actions =
-                            { action_start, action_stop, action_status };
+                            { action_start, action_stop };
             if (std::find(actions.begin(),
                           actions.end(), value) != actions.end()) {
                 return value;
