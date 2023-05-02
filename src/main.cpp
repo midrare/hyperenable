@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <deque>
 #include <filesystem>
-#include <limits>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <optional>
 #include <stdexcept>
@@ -18,8 +18,8 @@
 #include "argparse.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
-#include "yaml.hpp"
 #include "wincon.hpp"
+#include "yaml.hpp"
 
 const std::string program_name = "hyperenable";
 const std::string program_version = "0.1.1";
@@ -77,8 +77,7 @@ void Squatter::block(const UINT key) {
     hotkeys.emplace_back(hotkey_id);
     RegisterHotKey(
         NULL, hotkey_id,
-        MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN | MOD_NOREPEAT,
-        key);
+        MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN | MOD_NOREPEAT, key);
 }
 
 auto Process::run(const std::filesystem::path& path) -> std::optional<Process> {
@@ -160,10 +159,10 @@ auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
         .default_value(action_start)
         .help("one of " + action_start + " or " + action_stop)
         .action([](const std::string& value) {
-            static const std::vector<std::string> actions =
-                            { action_start, action_stop };
-            if (std::find(actions.begin(),
-                          actions.end(), value) != actions.end()) {
+            static const std::vector<std::string> actions = {
+                action_start, action_stop};
+            if (std::find(actions.begin(), actions.end(), value) !=
+                actions.end()) {
                 return value;
             }
             throw std::runtime_error("Unrecognized action \"" + value + "\"");
@@ -224,7 +223,6 @@ auto main(int argc, char* argv[]) -> int {
         return exit_ok;
     }
 
-
     std::cout << "Blocking keybinds." << std::endl;
     auto blocker = Squatter::block();
     auto timeout_ms = args.get<int>("--timeout");
@@ -248,9 +246,8 @@ auto main(int argc, char* argv[]) -> int {
     if (!args.get("--run").empty()) {
         std::filesystem::path path = args.get("--run");
         if (!std::filesystem::exists(path)) {
-            std::cerr << "File not found at \""
-                << args.get("--run") << "\""
-                << std::endl;
+            std::cerr << "File not found at \"" << args.get("--run") << "\""
+                      << std::endl;
             return exit_file_not_found;
         }
 
@@ -262,13 +259,10 @@ auto main(int argc, char* argv[]) -> int {
 }
 
 _Use_decl_annotations_ auto WINAPI WinMain(
-    HINSTANCE /*unused*/,
-    HINSTANCE /*unused*/,
-    PSTR /*unused*/,
-    INT /*unused*/) -> INT {
+    HINSTANCE /*unused*/, HINSTANCE /*unused*/, PSTR /*unused*/, INT /*unused*/)
+    -> INT {
     WinConsole console = WinConsole::attach();
 
     // https://learn.microsoft.com/en-us/cpp/c-runtime-library/argc-argv-wargv
     return main(__argc, __argv);
 }
-

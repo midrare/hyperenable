@@ -11,10 +11,8 @@
 
 #include "pipe.hpp"
 
-
 constexpr LPCSTR pipe_name = R"(\\.\pipe\e3f5a607-ec52-4841-886d-9502cf837302)";
-constexpr char cmd_stop = 0x01;  // arbitrary value
-
+constexpr char cmd_stop = 0x01; // arbitrary value
 
 auto Listener::create() -> std::optional<Listener> {
     auto server = std::make_shared<Server>();
@@ -27,14 +25,14 @@ auto Listener::create() -> std::optional<Listener> {
 
     listener->thread = std::make_shared<std::jthread>(
         // NOLINTNEXTLINE(performance-unnecessary-value-param)
-        std::jthread([server, received] (const std::stop_token stop) {
-        while (!stop.stop_requested()) {
-            if (server->poll()) {
-                received->store(true);
-                break;
+        std::jthread([server, received](const std::stop_token stop) {
+            while (!stop.stop_requested()) {
+                if (server->poll()) {
+                    received->store(true);
+                    break;
+                }
             }
-        }
-    }));
+        }));
 
     return listener;
 }
@@ -43,31 +41,28 @@ auto Listener::poll() -> bool {
     return received->load();
 }
 
-
 auto Server::init() -> bool {
     if (pipe != INVALID_HANDLE_VALUE) {
         return true;
     }
 
-    HANDLE existing = CreateFileA(pipe_name,
-        GENERIC_READ | GENERIC_WRITE, 0, NULL,
-        OPEN_EXISTING, 0, NULL);
+    HANDLE existing = CreateFileA(
+        pipe_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0,
+        NULL);
     if (existing != INVALID_HANDLE_VALUE) {
         CloseHandle(pipe);
         existing = INVALID_HANDLE_VALUE;
         return false;
     }
 
-    pipe = CreateNamedPipeA(pipe_name,
-       PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
-       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE
-       | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
-       1, bufsize, bufsize,
-       NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    pipe = CreateNamedPipeA(
+        pipe_name, PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+        PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
+            PIPE_REJECT_REMOTE_CLIENTS,
+        1, bufsize, bufsize, NMPWAIT_USE_DEFAULT_WAIT, NULL);
 
     return pipe != INVALID_HANDLE_VALUE;
 };
-
 
 void Server::deinit() {
     if (pipe != INVALID_HANDLE_VALUE) {
@@ -91,8 +86,8 @@ auto Server::read_into_buffer() -> bool {
     BOOL status = FALSE;
 
     if (ConnectNamedPipe(pipe, NULL) != FALSE) {
-        status = ReadFile(pipe, buffer.data(),
-                   buffer.size() - 1, &bytes_read, NULL);
+        status =
+            ReadFile(pipe, buffer.data(), buffer.size() - 1, &bytes_read, NULL);
     }
 
     DisconnectNamedPipe(pipe);
@@ -104,11 +99,9 @@ auto Client::init() -> bool {
         return true;
     }
 
-    pipe = CreateFileA(pipe_name,
-        GENERIC_READ | GENERIC_WRITE,
-        0, NULL,
-        OPEN_EXISTING,
-        0, NULL);
+    pipe = CreateFileA(
+        pipe_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0,
+        NULL);
 
     return pipe != INVALID_HANDLE_VALUE;
 }
