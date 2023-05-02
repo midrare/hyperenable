@@ -18,6 +18,7 @@
 #include "argparse.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
+#include "squatter.hpp"
 #include "wincon.hpp"
 #include "yaml.hpp"
 
@@ -33,11 +34,6 @@ const LPCSTR window_desktop = "Progman";
 const std::string action_start = "start";
 const std::string action_stop = "stop";
 
-constexpr UINT vk_digit_begin = 0x30;
-constexpr UINT vk_digit_end = 0x3a;
-constexpr UINT vk_alpha_begin = 0x41;
-constexpr UINT vk_alpha_end = 0x5b;
-
 constexpr int timeout_ms = 15000;
 constexpr int bufsize = 1024;
 constexpr int interval_ms = 100;
@@ -49,36 +45,6 @@ constexpr int exit_explorer_exists = 2;
 constexpr int exit_file_not_found = 3;
 constexpr int exit_connect_fail = 4;
 constexpr int exit_argparse = 5;
-
-void Squatter::init() {
-    block(VK_SPACE);
-    block(VK_LWIN);
-    block(VK_RWIN);
-
-    for (auto key = vk_digit_begin; key < vk_digit_end; key++) {
-        block(key);
-    }
-
-    for (auto key = vk_alpha_begin; key < vk_alpha_end; key++) {
-        block(key);
-    }
-}
-
-void Squatter::deinit() {
-    while (!hotkeys.empty()) {
-        auto key = hotkeys.front();
-        hotkeys.pop_front();
-        UnregisterHotKey(NULL, key);
-    }
-}
-
-void Squatter::block(const UINT key) {
-    int hotkey_id = min((std::numeric_limits<int>::max)(), hotkeys.size());
-    hotkeys.emplace_back(hotkey_id);
-    RegisterHotKey(
-        NULL, hotkey_id,
-        MOD_ALT | MOD_CONTROL | MOD_SHIFT | MOD_WIN | MOD_NOREPEAT, key);
-}
 
 auto Process::run(const std::filesystem::path& path) -> std::optional<Process> {
     Process runner;

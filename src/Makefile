@@ -11,7 +11,7 @@ CFLAGS := -std:c17 -O2
 CXXFLAGS := -std:c++20 -EHs -EHc -O2
 LDFLAGS := -nologo -subsystem:windows
 
-OBJ_FILES = pipe.obj wincon.obj yaml.obj main.obj
+OBJ_FILES = pipe.obj squatter.obj wincon.obj yaml.obj main.obj
 LINK_LIBS = user32.lib
 
 
