@@ -5,6 +5,7 @@ LD = cl -nologo
 RM = del -F -Q
 RMDIR = rmdir -S -Q
 MKDIR = mkdir
+COPY = xcopy /E /C /I /-I /Q /Y
 
 CFLAGS := -std:c17 -O2
 CXXFLAGS := -std:c++20 -EHs -EHc -O2
