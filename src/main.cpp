@@ -176,12 +176,9 @@ auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
         .scan<'i', int>()
         .metavar("INT");
     program.add_argument("-r", "--run")
-        .help("run a program after keybinds are released")
-        .metavar("PATH");
-    program.add_epilog("The -r parameter is can be used to run "
-                       "a hotkey setup program. This makes it easy to "
-                       "time its execution until after this program "
-                       "has made sure it's safe.");
+        .help("run a program after keybinds are released. can "
+              "be used to run a hotkey setup app")
+        .metavar("FILE");
 
     try {
         program.parse_args(argc, argv);
@@ -248,11 +245,12 @@ auto main(int argc, char* argv[]) -> int {
     std::cout << "Unblocking keybinds." << std::endl;
     blocker.unblock();
 
-    if (!args.get("run").empty()) {
-        std::filesystem::path path = args.get("run");
+    if (!args.get("--run").empty()) {
+        std::filesystem::path path = args.get("--run");
         if (!std::filesystem::exists(path)) {
-            std::cerr << "File not found at \"" << args.get("run") << "\""
-                      << std::endl;
+            std::cerr << "File not found at \""
+                << args.get("--run") << "\""
+                << std::endl;
             return exit_file_not_found;
         }
 
