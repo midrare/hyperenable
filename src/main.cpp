@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <deque>
 #include <filesystem>
 #include <limits>
 #include <iostream>
 #include <map>
 #include <optional>
+#include <stdexcept>
 #include <vector>
 
 // windows.h must come first
@@ -27,6 +29,10 @@ const LPCSTR window_taskbar = "Shell_TrayWnd";
 // class that designates the desktop. this is the borderless window
 // that shows your recycling bin and desktop icons
 const LPCSTR window_desktop = "Progman";
+
+const std::string action_start = "start";
+const std::string action_stop = "stop";
+const std::string action_status = "status";
 
 constexpr UINT vk_digit_begin = 0x30;
 constexpr UINT vk_digit_end = 0x3a;
@@ -151,25 +157,35 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
 
 auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
     argparse::ArgumentParser program(program_name, program_version);
+    program.add_argument("action")
+        .default_value(action_start)
+        .help("one of " + action_start + ", " + action_stop
+              + ", or " + action_status)
+        .action([](const std::string& value) {
+            static const std::vector<std::string> actions =
+                            { action_start, action_stop, action_status };
+            if (std::find(actions.begin(),
+                          actions.end(), value) != actions.end()) {
+                return value;
+            }
+            throw std::runtime_error("Unrecognized action \"" + value + "\"");
+        });
+
     program.add_argument("-t", "--timeout")
-        .help("max time to wait for explorer.exe to load. in milliseconds. "
+        .help("max milliseconds to wait for explorer.exe to load. "
               "negative for infinite")
         .default_value(timeout_ms)
         .scan<'i', int>()
         .metavar("INT");
     program.add_argument("--delay")
-        .help("wait a while after explorer.exe is active before releasing "
-              "keybinds. in milliseconds")
+        .help("wait milliseconds after explorer.exe is active "
+              "before releasing keybinds")
         .default_value(delay_ms)
         .scan<'i', int>()
         .metavar("INT");
     program.add_argument("-r", "--run")
-        .help("run a program after this one terminates")
+        .help("run a program after keybinds are released")
         .metavar("PATH");
-    program.add_argument("--release")
-        .help("release keybinds")
-        .implicit_value(true)
-        .default_value(false);
     program.add_epilog("The -r parameter is can be used to run "
                        "a hotkey setup program. This makes it easy to "
                        "time its execution until after this program "
@@ -187,7 +203,7 @@ auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
 
 auto main(int argc, char* argv[]) -> int {
     auto args = parse_args(argc, argv);
-    if (args.get<bool>("--release")) {
+    if (args.get("action") == action_stop) {
         auto client = Client();
         if (!client.init()) {
             std::cout << "Not blocking; no need to release." << std::endl;
