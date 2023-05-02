@@ -175,12 +175,6 @@ auto parse_args(int argc, char* argv[]) -> argparse::ArgumentParser {
         .default_value(timeout_ms)
         .scan<'i', int>()
         .metavar("INT");
-    program.add_argument("--delay")
-        .help("wait milliseconds after explorer.exe is active "
-              "before releasing keybinds")
-        .default_value(delay_ms)
-        .scan<'i', int>()
-        .metavar("INT");
     program.add_argument("-r", "--run")
         .help("run a program after keybinds are released")
         .metavar("PATH");
@@ -249,12 +243,6 @@ auto main(int argc, char* argv[]) -> int {
     while (waited_ms < timeout_ms && !server->poll()) {
         Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
         waited_ms += interval_ms;
-    }
-
-    auto delay_ms = args.get<int>("--delay");
-    if (delay_ms > 0) {
-        std::cout << "Delaying." << std::endl;
-        Sleep(delay_ms);
     }
 
     std::cout << "Unblocking keybinds." << std::endl;
