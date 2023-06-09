@@ -1,0 +1,11 @@
+# see keys.hpp for possible values
+keyboard_shortcuts:
+    - "ctrl+alt+shift+win+w"
+    - "ctrl+alt+shift+win+t"
+    - "ctrl+alt+shift+win+y"
+    - "ctrl+alt+shift+win+o"
+    - "ctrl+alt+shift+win+p"
+    - "ctrl+alt+shift+win+d"
+    - "ctrl+alt+shift+win+l"
+    - "ctrl+alt+shift+win+x"
+    - "ctrl+alt+shift+win+n"
