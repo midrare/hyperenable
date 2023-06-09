@@ -11,8 +11,10 @@
 // windows.h must come first
 #include <windows.h>
 
+#include <combaseapi.h>
 #include <fileapi.h>
 #include <handleapi.h>
+#include <shellapi.h>
 #include <winuser.h>
 
 #include "argparse.hpp"
@@ -23,7 +25,7 @@
 #include "yaml.hpp"
 
 const std::string program_name = "hyperenable";
-const std::string program_version = "0.1.2";
+const std::string program_version = "0.1.3";
 
 const LPCSTR window_taskbar = "Shell_TrayWnd";
 
@@ -45,22 +47,6 @@ constexpr int exit_explorer_exists = 2;
 constexpr int exit_file_not_found = 3;
 constexpr int exit_connect_fail = 4;
 constexpr int exit_argparse = 5;
-
-auto Process::run(const std::filesystem::path& path) -> std::optional<Process> {
-    Process runner;
-    if (!runner.run_exe(path)) {
-        return {};
-    }
-
-    return runner;
-}
-
-auto Process::run_exe(const std::filesystem::path& path) -> bool {
-    return CreateProcess(
-               path.string().c_str(), NULL, NULL, NULL, FALSE,
-               NORMAL_PRIORITY_CLASS, NULL, NULL, &start_info,
-               &proc_info) == TRUE;
-}
 
 auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
     auto* explorer = FindWindow(win, NULL);
@@ -117,6 +103,24 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
     }
 
     return min((std::numeric_limits<int>::max)(), waited_ms);
+}
+
+/* wtos() is from https://stackoverflow.com/a/67134110
+ * https://stackoverflow.com/users/870239/liang-august-yuning
+ * CC BY-SA 4.0
+ */
+std::wstring wtos(const std::string& value) {
+    const size_t cSize = value.size() + 1;
+
+    std::wstring wc;
+    wc.resize(cSize);
+
+    size_t cSize1;
+    mbstowcs_s(&cSize1, (wchar_t*)&wc[0], cSize, value.c_str(), cSize);
+
+    wc.pop_back();
+
+    return wc;
 }
 
 auto main(int argc, char* argv[]) -> int {
@@ -196,13 +200,19 @@ auto main(int argc, char* argv[]) -> int {
         if (!args_start.get("--run").empty()) {
             std::filesystem::path path = args_start.get("--run");
             if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \"" << args_start.get("--run")
-                          << "\"" << std::endl;
+                std::cerr << "File not found at \"" << path << "\""
+                          << std::endl;
                 return exit_file_not_found;
             }
 
             std::cout << "Running program at " << path << std::endl;
-            auto runner = Process::run(path);
+
+            // always init COM before using ShellExecute()
+            // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutea#remarks
+            CoInitializeEx(
+                NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+            auto status = ShellExecuteW(
+                NULL, wtos("Open").c_str(), path.c_str(), NULL, NULL, SW_HIDE);
         }
 
         return exit_ok;

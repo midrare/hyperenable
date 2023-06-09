@@ -12,7 +12,7 @@ CXXFLAGS := -std:c++20 -EHs -EHc -O2
 LDFLAGS := -nologo -subsystem:windows
 
 OBJ_FILES = pipe.obj squatter.obj wincon.obj yaml.obj main.obj
-LINK_LIBS = user32.lib
+LINK_LIBS = user32.lib shell32.lib ole32.lib
 
 
 all: hyperenable.exe
