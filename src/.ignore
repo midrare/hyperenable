@@ -2,3 +2,5 @@
 /*.obj
 /*.o
 /argparse.hpp
+/yaml.hpp
+/yaml.cpp
