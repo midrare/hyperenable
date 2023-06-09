@@ -2,6 +2,8 @@
 #define H3998501979
 
 #include <deque>
+#include <string>
+#include <vector>
 
 // windows.h must come before other windows headers
 #include <windows.h>
@@ -16,7 +18,7 @@ public:
         other.hotkeys.clear();
     }
 
-    ~Squatter() { unblock(); }
+    ~Squatter();
 
     auto operator=(const Squatter& other) -> Squatter& = delete;
     auto operator=(Squatter&& other) noexcept -> Squatter& {
@@ -27,16 +29,18 @@ public:
         return *this;
     }
 
-    static auto block() -> Squatter { return std::move(Squatter()); };
+    static auto block(const std::vector<std::pair<UINT, UINT>>& keys)
+        -> Squatter {
+        Squatter squatter(keys);
+        return std::move(squatter);
+    };
 
-    void block(const UINT key);
-    auto unblock() -> void { deinit(); };
+    auto unblock() -> void;
 
 private:
-    Squatter() { init(); }
+    Squatter(const std::vector<std::pair<UINT, UINT>>& keys);
 
-    void init();
-    void deinit();
+    void block(const UINT modifiers, const UINT key);
 
     std::deque<int> hotkeys;
 };
