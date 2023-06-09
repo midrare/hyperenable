@@ -68,10 +68,9 @@ auto parse_keybind(const std::string& s) -> std::optional<std::pair<int, int>> {
 
 auto read_config(const std::filesystem::path& path) -> Config {
     Yaml::Node root;
-    Yaml::Parse(root, path.string());
+    Yaml::Parse(root, std::filesystem::absolute(path).string().c_str());
 
     Config conf;
-
     if (root.IsMap() && root["keyboard_shortcuts"].IsSequence()) {
         for (auto i = 0; i < root["keyboard_shortcuts"].Size(); i++) {
             auto& e = root["keyboard_shortcuts"][i];
