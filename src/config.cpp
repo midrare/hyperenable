@@ -44,11 +44,8 @@ auto parse_keybind(const std::string& s) -> std::optional<std::pair<int, int>> {
     int keycode = 0;
 
     auto segs = resplit(s, std::regex("\\s*\\+\\s*"));
-    for (auto& seg : segs) {
-        if (seg.empty()) {
-            continue;
-        }
 
+    for (auto& seg : segs) {
         auto modifier = find(modifier_keycode_to_str, seg);
         if (modifier.has_value()) {
             modifiers |= modifier.value();
