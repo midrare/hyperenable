@@ -3,6 +3,9 @@
 
 #include <deque>
 
+// windows.h must come before other windows headers
+#include <windows.h>
+
 class Squatter {
 public:
     Squatter(const Squatter& other) = delete;
