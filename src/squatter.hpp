@@ -2,6 +2,7 @@
 #define H3998501979
 
 #include <deque>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -12,24 +13,18 @@ class Squatter {
 public:
     Squatter(const Squatter& other) = delete;
     Squatter(Squatter&& other) noexcept {
-        for (auto e : other.hotkeys) {
-            hotkeys.emplace_back(e);
-        }
-        other.hotkeys.clear();
+        hotkeys = std::move(other.hotkeys);
     }
 
     ~Squatter();
 
     auto operator=(const Squatter& other) -> Squatter& = delete;
     auto operator=(Squatter&& other) noexcept -> Squatter& {
-        for (auto e : other.hotkeys) {
-            hotkeys.emplace_back(e);
-        }
-        other.hotkeys.clear();
+        hotkeys = std::move(other.hotkeys);
         return *this;
     }
 
-    static auto block(const std::vector<std::pair<UINT, UINT>>& keys)
+    static auto block(const std::vector<std::pair<int, int>>& keys)
         -> Squatter {
         Squatter squatter(keys);
         return std::move(squatter);
@@ -38,9 +33,9 @@ public:
     auto unblock() -> void;
 
 private:
-    Squatter(const std::vector<std::pair<UINT, UINT>>& keys);
+    Squatter(const std::vector<std::pair<int, int>>& keys);
 
-    void block(const UINT modifiers, const UINT key);
+    void block(const int modifiers, const int key);
 
     std::deque<int> hotkeys;
 };

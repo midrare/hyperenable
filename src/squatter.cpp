@@ -6,7 +6,7 @@
 
 #include "squatter.hpp"
 
-Squatter::Squatter(const std::vector<std::pair<UINT, UINT>>& keys) {
+Squatter::Squatter(const std::vector<std::pair<int, int>>& keys) {
     for (auto& [mods, key] : keys) {
         block(mods, key);
     }
@@ -18,13 +18,13 @@ Squatter::~Squatter() {
 
 void Squatter::unblock() {
     while (!hotkeys.empty()) {
-        auto key = hotkeys.front();
+        auto hotkey_id = hotkeys.front();
         hotkeys.pop_front();
-        UnregisterHotKey(NULL, key);
+        UnregisterHotKey(NULL, hotkey_id);
     }
 }
 
-void Squatter::block(const UINT modifiers, const UINT key) {
+void Squatter::block(const int modifiers, const int key) {
     int hotkey_id = min((std::numeric_limits<int>::max)(), hotkeys.size());
     hotkeys.emplace_back(hotkey_id);
     RegisterHotKey(NULL, hotkey_id, modifiers | MOD_NOREPEAT, key);

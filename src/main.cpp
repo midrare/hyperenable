@@ -18,6 +18,8 @@
 #include <winuser.h>
 
 #include "argparse.hpp"
+#include "config.hpp"
+#include "keys.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
 #include "squatter.hpp"
@@ -132,10 +134,13 @@ auto main(int argc, char* argv[]) -> int {
         .default_value(timeout_ms)
         .scan<'i', int>()
         .metavar("INT");
+    args_start.add_argument("-c", "--config")
+        .help("read settings from file")
+        .metavar("PATH");
     args_start.add_argument("-r", "--run")
         .help("run a program afterwards. can "
               "be used to run a hotkey setup app")
-        .metavar("FILE");
+        .metavar("PATH");
     args_start.add_epilog("Keybind registration attempts will be "
                           "blocked until terminated, timeout elapses, "
                           "or stop signal is received, whichever happens "
@@ -176,8 +181,75 @@ auto main(int argc, char* argv[]) -> int {
             return exit_ok;
         }
 
+        Config config;
+        if (args_start.present("--config")) {
+            std::filesystem::path path = args_start.get("--config");
+            if (!std::filesystem::exists(path)) {
+                std::cerr << "File not found at \"" << path << "\""
+                          << std::endl;
+                return exit_file_not_found;
+            }
+            config = read_config(path);
+        }
+
+        if (config.keyboard_shortcuts.empty()) {
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+a").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+b").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+c").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+d").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+e").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+f").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+g").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+h").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+i").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+j").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+k").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+l").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+m").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+n").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+o").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+p").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+q").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+r").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+s").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+t").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+u").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+v").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+w").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+x").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+y").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+alt+shift+win+z").value());
+        }
+
         std::cout << "Blocking keybinds." << std::endl;
-        auto blocker = Squatter::block();
+        auto blocker = Squatter::block(config.keyboard_shortcuts);
+
         auto timeout_ms = args_start.get<int>("--timeout");
 
         std::cout << "Waiting for explorer.exe" << std::endl;
@@ -197,7 +269,7 @@ auto main(int argc, char* argv[]) -> int {
         std::cout << "Unblocking keybinds." << std::endl;
         blocker.unblock();
 
-        if (!args_start.get("--run").empty()) {
+        if (args_start.present("--run")) {
             std::filesystem::path path = args_start.get("--run");
             if (!std::filesystem::exists(path)) {
                 std::cerr << "File not found at \"" << path << "\""
