@@ -1,3 +1,4 @@
+SHELL = cmd.exe
 RM = del -F -Q
 RMDIR = rmdir -S -Q
 MKDIR = mkdir

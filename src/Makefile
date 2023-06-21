@@ -1,3 +1,4 @@
+SHELL = cmd.exe
 CC = cl -nologo -c
 CXX = cl -nologo -c
 LD = cl -nologo
