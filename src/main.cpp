@@ -194,57 +194,23 @@ auto main(int argc, char* argv[]) -> int {
 
         if (config.keyboard_shortcuts.empty()) {
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+a").value());
+                parse_keybind("ctrl+alt+shift+win+w").value());
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+b").value());
+                parse_keybind("ctrl+alt+shift+win+t").value());
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+c").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+d").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+e").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+f").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+g").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+h").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+i").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+j").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+k").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+l").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+m").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+n").value());
+                parse_keybind("ctrl+alt+shift+win+y").value());
             config.keyboard_shortcuts.push_back(
                 parse_keybind("ctrl+alt+shift+win+o").value());
             config.keyboard_shortcuts.push_back(
                 parse_keybind("ctrl+alt+shift+win+p").value());
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+q").value());
+                parse_keybind("ctrl+alt+shift+win+d").value());
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+r").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+s").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+t").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+u").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+v").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+w").value());
+                parse_keybind("ctrl+alt+shift+win+l").value());
             config.keyboard_shortcuts.push_back(
                 parse_keybind("ctrl+alt+shift+win+x").value());
             config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+y").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+z").value());
+                parse_keybind("ctrl+alt+shift+win+n").value());
         }
 
         std::cout << "Blocking keybinds." << std::endl;
