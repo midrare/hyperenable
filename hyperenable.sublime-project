@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "folder_exclude_patterns": [
+                ".idea",
+                ".hookspace",
+                "node_modules",
+                "venv",
+                ".venv",
+                "__pycache__",
+            ],
+            "path": ".",
+            "file_exclude_patterns": [
+                "*.bak",
+                "tags",
+                "*.tags",
+                "~.*",
+                "*.tmp",
+                "*.temp",
+                ".root",
+                "*~",
+            ]
+        }
+    ]
+}
