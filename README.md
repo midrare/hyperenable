@@ -22,7 +22,7 @@
 
 
 ## Building
-  1. Install Visual Studio 2022
+  1. Install Visual Studio 2022. Make sure to include MSVC C++ x64/x86 build tools
   2. Install [GNU Make](https://scoop.sh/)
   3. Start Visual Studio 2022 developer prompt
   4. `cd ~/project_dir`
