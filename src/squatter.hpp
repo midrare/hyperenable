@@ -2,38 +2,40 @@
 #define H3998501979
 
 #include <deque>
+#include <iostream>
+#include <string>
+#include <vector>
+
+// windows.h must come before other windows headers
+#include <windows.h>
 
 class Squatter {
 public:
     Squatter(const Squatter& other) = delete;
     Squatter(Squatter&& other) noexcept {
-        for (auto e : other.hotkeys) {
-            hotkeys.emplace_back(e);
-        }
-        other.hotkeys.clear();
+        hotkeys = std::move(other.hotkeys);
     }
 
-    ~Squatter() { unblock(); }
+    ~Squatter();
 
     auto operator=(const Squatter& other) -> Squatter& = delete;
     auto operator=(Squatter&& other) noexcept -> Squatter& {
-        for (auto e : other.hotkeys) {
-            hotkeys.emplace_back(e);
-        }
-        other.hotkeys.clear();
+        hotkeys = std::move(other.hotkeys);
         return *this;
     }
 
-    static auto block() -> Squatter { return std::move(Squatter()); };
+    static auto block(const std::vector<std::pair<int, int>>& keys)
+        -> Squatter {
+        Squatter squatter(keys);
+        return std::move(squatter);
+    };
 
-    void block(const UINT key);
-    auto unblock() -> void { deinit(); };
+    auto unblock() -> void;
 
 private:
-    Squatter() { init(); }
+    Squatter(const std::vector<std::pair<int, int>>& keys);
 
-    void init();
-    void deinit();
+    void block(const int modifiers, const int key);
 
     std::deque<int> hotkeys;
 };

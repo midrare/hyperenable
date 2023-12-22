@@ -1,3 +1,4 @@
+SHELL = cmd.exe
 CC = cl -nologo -c
 CXX = cl -nologo -c
 LD = cl -nologo
@@ -11,7 +12,7 @@ CFLAGS := -std:c17 -O2
 CXXFLAGS := -std:c++20 -EHs -EHc -O2
 LDFLAGS := -nologo -subsystem:windows
 
-OBJ_FILES = pipe.obj squatter.obj wincon.obj yaml.obj main.obj
+OBJ_FILES = pipe.obj squatter.obj wincon.obj yaml.obj keys.obj config.obj main.obj
 LINK_LIBS = user32.lib shell32.lib ole32.lib
 
 
