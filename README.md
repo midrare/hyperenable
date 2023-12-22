@@ -20,7 +20,7 @@
   PS> ./install.ps1 -action uninstall
   ```
 
- **Options**
+ **Options**  
  hyperenable comes with CLI options that control some aspects of its behavior. These include:
 
   - `-c, --config PATH`  
