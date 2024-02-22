@@ -168,7 +168,7 @@ If ($Action -eq "install") {
 
 
     Write-Output "Writing $Exe to $Destination"
-    New-Item -Path (Split-Path -Parent $Destination) -Type Directory -ErrorAction Ignore | Out-Null
+    New-Item -Path (Split-Path -Parent $Destination) -Type Directory -Force -ErrorAction Ignore | Out-Null
     Copy-Item -Path "hyperenable.exe" -Destination $Destination -Force -ErrorAction Stop
 
 
@@ -177,7 +177,7 @@ If ($Action -eq "install") {
 
 
     Write-Output "Writing ${MSOFFICE_REG_KEY}\${MSOFFICE_REG_VALUE}"
-    New-Item -Path $MSOFFICE_REG_KEY -ErrorAction Ignore | Out-Null
+    New-Item -Path $MSOFFICE_REG_KEY -Force -ErrorAction Ignore | Out-Null
     Set-Item -Path $MSOFFICE_REG_KEY -Value $MSOFFICE_REG_VALUE -Type String
 
 
