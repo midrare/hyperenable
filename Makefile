@@ -9,8 +9,14 @@ all: src
 
 src:
 	$(MAKE) -C src
-	@$(COPY) src\\*.exe .\\
 
 clean:
 	$(MAKE) -C src clean
-	@$(RM) hyper*.exe
+	@echo > .dummy.tmp
+	@$(RM) .dummy.tmp hyper*.exe hyper*.zip
+
+# tar is bundled with Windows 10+
+release: src
+	@$(COPY) src\\hyperenable.exe .\\
+	tar -a -c -f hyperenable-release.zip example_config.yaml hyperenable.exe install.ps1 LICENSE.md README.md
+	@$(RM) hyperenable.exe
