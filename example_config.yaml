@@ -28,7 +28,7 @@ keyboard_shortcuts:
   # - "win+z"  # snap layouts (tile windows)
 
   # - "win+."             # emoji panel
-  # - "win+,"             # also emoji panel
+  # - "win+,"             # peek desktop
   # - "win+/"             # IME reconversion
   # - "win+tab"           # task view
   # - "win+backspace"     # navigate back
