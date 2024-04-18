@@ -1,11 +1,165 @@
 # see keys.hpp for possible values
 keyboard_shortcuts:
-    - "ctrl+alt+shift+win+w"
-    - "ctrl+alt+shift+win+t"
-    - "ctrl+alt+shift+win+y"
-    - "ctrl+alt+shift+win+o"
-    - "ctrl+alt+shift+win+p"
-    - "ctrl+alt+shift+win+d"
-    - "ctrl+alt+shift+win+l"
-    - "ctrl+alt+shift+win+x"
-    - "ctrl+alt+shift+win+n"
+  # - "win+a"  # quick settings (notifications bar popup)
+  # - "win+b"  # focus tray icon
+  # - "win+c"  # windows copilot
+  # - "win+d"  # show desktop
+  # - "win+e"  # new file explorer window
+  - "win+f"  # microsoft feedback hub
+  # - "win+g"  # xbox game bar overlay
+  # - "win+h"  # windows voice typing
+  # - "win+i"  # windows settings app
+  - "win+j"  # focus windows tip (how-to-use-windows popups)
+  # - "win+k"  # cast screen to device
+  # - "win+l"  # lock screen
+  # - "win+m"  # minimize all windows
+  # - "win+n"  # notification center and calendar
+  # - "win+o"  # (currently unbound)
+  # - "win+p"  # switch presentation display mode
+  # - "win+q"  # search this pc
+  # - "win+r"  # run dialog
+  # - "win+s"  # search this pc
+  # - "win+t"  # cycle taskbar apps
+  # - "win+u"  # accessibility settings
+  # - "win+v"  # clipboard history (must be first enabled in Settings -> System -> Clipboard -> Clipboard History)
+  # - "win+w"  # widgets sidebar
+  # - "win+x"  # quick links menu
+  # - "win+y"  # switch between desktop and windows mixed reality
+  # - "win+z"  # snap layouts (tile windows)
+
+  # - "win+."             # emoji panel
+  # - "win+,"             # also emoji panel
+  # - "win+/"             # IME reconversion
+  # - "win+tab"           # task view
+  # - "win+backspace"     # navigate back
+  # - "win+print"         # screenshot
+  # - "win+pause"         # about this pc
+  # - "win+shift+c"       # charms bar
+  # - "win+shift+v"       # focus notification
+  # - "win+alt+b"         # toggle HDR
+  # - "win+alt+enter"     # taskbar settings
+  # - "win+ctrl+f"        # search for networked pcs
+  # - "win+ctrl+q"        # quick assist
+  # - "win+ctrl+shift+b"  # wake pc from blank or black screen
+
+  # window controls (minimize, maximize, tiling, etc)
+  # - "win+down"        # minimize window
+  # - "win+left"        # snap window to left half of screen
+  # - "win+right"       # snap window to right half of screen
+  # - "win+up"          # restore/maximize window
+  # - "win+home"        # minimize/restore all other windows
+  # - "win+alt+down"    # snap window to bottom half of screen
+  # - "win+alt+up"      # snap window to top half of screen
+  # - "win+shift+m"     # restore all minimized windows
+  # - "win+shift+down"  # minimize/restore vertial axis only
+  # - "win+shift+left"  # move to monitor to the left
+  # - "win+shift+right" # move to monitor to the right
+  # - "win+shift+up"    # maximize vertial axis only
+
+  # voice/screen recoring
+  # - "win+alt+b"     # start/stop broadcasting (xbox game bar)
+  # - "win+alt+g"     # record last 30 secs
+  # - "win+alt+k"     # toggle mic (in apps supporting Call Mute feature)
+  # - "win+alt+m"     # toggle mic (xbox game bar)
+  # - "win+alt+r"     # toggle screen recording (xbox game bar)
+  # - "win+alt+t"     # show/hide screen recording timer
+  # - "win+alt+w"     # show camera during broadcast (xbox game bar)
+  # - "win+alt+print" # screenshot of current window (using xbox game bar)
+  # - "win+shift+s"   # screenshot user-selected area
+
+  # magnifier controls
+  # - "win+minus"  # magnifier zoom out
+  # - "win+plus"   # magnifier zoom in
+  # - "win+esc"    # close magnifier
+  # - "win+ctrl+m" # magnifier settings
+
+  # input language
+  # - "win+space"       # cycle input language
+  # - "win+shift+space" # cycle (backwards) input language
+  # - "win+ctrl+space"  # last used input language
+
+  # accessibility
+  # - "win+alt+h"       # voice typing
+  # - "win+ctrl+c"      # toggle color filters (Settings -> Accessibility -> Color Filters)
+  # - "win+ctrl+n"      # narrator settings
+  # - "win+ctrl+o"      # on-screen keyboard
+  # - "win+ctrl+s"      # windows speech recognition
+  # - "win+ctrl+enter"  # windows narrator
+
+  # virtual desktops
+  # - "win+ctrl+d"     # new virtual desktop
+  # - "win+ctrl+right" # switch to virtual desktop on right
+  # - "win+ctrl+left"  # switch to virtual desktop on left
+  # - "win+ctrl+f4"    # close virtual desktop
+
+  # start or focus taskbar app N
+  # - "win+1"
+  # - "win+2"
+  # - "win+3"
+  # - "win+4"
+  # - "win+5"
+  # - "win+6"
+  # - "win+7"
+  # - "win+8"
+  # - "win+9"
+  # - "win+0"
+
+  # show jump list of taskbar app N
+  # - "win+alt+1"
+  # - "win+alt+2"
+  # - "win+alt+3"
+  # - "win+alt+4"
+  # - "win+alt+5"
+  # - "win+alt+6"
+  # - "win+alt+7"
+  # - "win+alt+8"
+  # - "win+alt+9"
+  # - "win+alt+0"
+
+  # focus existing instance of taskbar app N
+  # - "win+ctrl+1"
+  # - "win+ctrl+2"
+  # - "win+ctrl+3"
+  # - "win+ctrl+4"
+  # - "win+ctrl+5"
+  # - "win+ctrl+6"
+  # - "win+ctrl+7"
+  # - "win+ctrl+8"
+  # - "win+ctrl+9"
+  # - "win+ctrl+0"
+
+  # start new instance of taskbar app N
+  # - "win+shift+1"
+  # - "win+shift+2"
+  # - "win+shift+3"
+  # - "win+shift+4"
+  # - "win+shift+5"
+  # - "win+shift+6"
+  # - "win+shift+7"
+  # - "win+shift+8"
+  # - "win+shift+9"
+  # - "win+shift+0"
+
+  # start new admin instance of taskbar app N
+  # - "win+ctrl+shift+1"
+  # - "win+ctrl+shift+2"
+  # - "win+ctrl+shift+3"
+  # - "win+ctrl+shift+4"
+  # - "win+ctrl+shift+5"
+  # - "win+ctrl+shift+6"
+  # - "win+ctrl+shift+7"
+  # - "win+ctrl+shift+8"
+  # - "win+ctrl+shift+9"
+  # - "win+ctrl+shift+0"
+
+  # hyper key (aka office key)
+  - "win+ctrl+alt+shift+d"  # onedrive
+  - "win+ctrl+alt+shift+l"  # linkedin
+  - "win+ctrl+alt+shift+n"  # onenote
+  - "win+ctrl+alt+shift+o"  # microsoft outlook
+  - "win+ctrl+alt+shift+p"  # microsoft powerpoint
+  - "win+ctrl+alt+shift+t"  # microsoft teams
+  - "win+ctrl+alt+shift+w"  # microsoft word
+  - "win+ctrl+alt+shift+x"  # microsoft excel
+  - "win+ctrl+alt+shift+y"  # yammer
+
