@@ -176,6 +176,10 @@ If ($Action -eq "install") {
     Write-Userinit -exe $Destination
 
 
+    # yes, this is necessary even with hyperenable
+    # hyperenable can block win+shift+ctrl+alt+X but not the basic
+    # win+shift+ctrl+alt itself. it might be handled at a lower level
+    # of the OS, but I'm not sure
     Write-Output "Writing ${MSOFFICE_REG_KEY}\${MSOFFICE_REG_VALUE}"
     New-Item -Path $MSOFFICE_REG_KEY -Force -ErrorAction Ignore | Out-Null
     Set-Item -Path $MSOFFICE_REG_KEY -Value $MSOFFICE_REG_VALUE -Type String
