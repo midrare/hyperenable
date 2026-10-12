@@ -186,7 +186,7 @@ If ($Action -eq "install") {
 
 
     Write-Output "Writing $STARTUP_SHORTCUT"
-    Write-Shortcut $STARTUP_SHORTCUT $Destination '--kill'
+    Write-Shortcut $STARTUP_SHORTCUT $Destination '--request-exit'
 } ElseIf ($Action -eq "uninstall") {
     Write-Output "Deleting $Destination"
     Remove-Item -Path $Destination -Force -ErrorAction Ignore

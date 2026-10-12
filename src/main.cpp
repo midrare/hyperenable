@@ -102,7 +102,7 @@ auto build_arg_parser() -> argparse::ArgumentParser {
             "allowed and which ones " +
             program_name + " unbinds for you.")
         .metavar("PATH");
-    args.add_argument("--kill")
+    args.add_argument("--request-exit")
         .help(
             "unblock keybind registration attempts. a signal will be sent "
             "to a running instance of " +
@@ -241,7 +241,7 @@ auto main(int argc, char* argv[]) -> int {
         return exit_argparse;
     }
 
-    if (args.get<bool>("--kill")) {
+    if (args.get<bool>("--request-exit")) {
         signal_running_instance();
         return exit_ok;
     }

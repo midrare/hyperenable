@@ -25,19 +25,19 @@ PS> ./install.ps1 -action uninstall
 **Options**  
 hyperenable comes with CLI options that control some aspects of its behavior.
 
-```console
-Usage: hyperenable [--help] [--version] [--timeout INT] [--config PATH] [--kill]
+```
+Usage: hyperenable [--help] [--version] [--timeout INT] [--config PATH] [--request-exit]
 
 Block default keybind registration attempts from Windows
 
-Windows reserves certain hotkeys for its own use. These include the Office key (win+shift+ctrl+alt) among many others. To unbind these hyperenable starts before explorer.exe and registers them before Windows can, like a domain squatter. After hyperenable exits, these keybinds can then rebound for your own use.
+Windows reserves certain hotkeys for its own use. These include the Office key (win+shift+ctrl+alt) among many others. To unbind these, hyperenable starts before explorer.exe and registers them before Windows can, like a domain squatter. After hyperenable exits, these keybinds can then rebound for your own use.
 
 Optional arguments:
   -h, --help            shows help message and exits
   -v, --version         prints version information and exits
-  -t, --timeout INT     wait specified milliseconds to for explorer.exe to load. negative for no timeout [default: 15000]
+  -t, --timeout INT     seconds to wait to for explorer.exe to load. negative waits forever [default: 30]
   -c, --config PATH     read given config file that controls which keybinds are affected. this allows you to control which of Windows default keybinds are allowed and which ones hyperenable unbinds for you.
-  --kill                unblock keybind registration attempts. a signal will be sent to a running instance of hyperenable to stop blocking keybinds. you normally do not need to call this yourself
+  --request-exit        unblock keybind registration attempts. a signal will be sent to a running instance of hyperenable to stop blocking keybinds. you normally do not need to call this yourself
 
 Keybind registration attempts will be blocked until hyperenable is killed, timeout elapses, or stop signal is received, whichever happens first.
 ```
