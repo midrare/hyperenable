@@ -3,7 +3,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 // windows.h must be before other windows headers
 #include <windows.h>

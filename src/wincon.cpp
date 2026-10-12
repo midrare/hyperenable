@@ -1,6 +1,5 @@
 #include <cassert>
 #include <cstdio>
-#include <fstream>
 #include <stdexcept>
 
 // windows.h must come before other windows headers
@@ -51,7 +50,7 @@ void WinConsole::detach_console() {
         this->stderr_ = nullptr;
     }
 
-    if (static_cast<bool>(this->attached)) {
+    if (this->attached) {
         FreeConsole();
         this->attached = false;
     }

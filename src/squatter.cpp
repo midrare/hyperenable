@@ -1,4 +1,3 @@
-#include <string>
 #include <vector>
 
 // windows.h must be before other windows headers
@@ -7,7 +6,7 @@
 #include "squatter.hpp"
 
 Squatter::Squatter(const std::vector<std::pair<int, int>>& keys) {
-    for (auto& [mods, key] : keys) {
+    for (const auto& [mods, key] : keys) {
         block(mods, key);
     }
 }

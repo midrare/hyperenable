@@ -1,9 +1,6 @@
-#include <algorithm>
-#include <deque>
 #include <filesystem>
 #include <iostream>
 #include <limits>
-#include <map>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -19,12 +16,10 @@
 
 #include "argparse.hpp"
 #include "config.hpp"
-#include "keys.hpp"
 #include "main.hpp"
 #include "pipe.hpp"
 #include "squatter.hpp"
 #include "wincon.hpp"
-#include "yaml.hpp"
 
 const std::string program_name = "hyperenable";
 const std::string program_version = "0.1.3";
@@ -111,14 +106,15 @@ auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
  * https://stackoverflow.com/users/870239/liang-august-yuning
  * CC BY-SA 4.0
  */
-std::wstring wtos(const std::string& value) {
+auto wtos(const std::string& value) -> std::wstring {
     const size_t cSize = value.size() + 1;
 
     std::wstring wc;
     wc.resize(cSize);
 
-    size_t cSize1;
-    mbstowcs_s(&cSize1, (wchar_t*)&wc[0], cSize, value.c_str(), cSize);
+    size_t cSize1 = 0;
+    mbstowcs_s(
+        &cSize1, static_cast<wchar_t*>(&wc[0]), cSize, value.c_str(), cSize);
 
     wc.pop_back();
 
@@ -129,8 +125,9 @@ auto main(int argc, char* argv[]) -> int {
     argparse::ArgumentParser args_start(action_start);
     args_start.add_description("Block keybind registration attempts");
     args_start.add_argument("-t", "--timeout")
-        .help("max milliseconds to wait for explorer.exe to load. "
-              "negative for infinite")
+        .help(
+            "max milliseconds to wait for explorer.exe to load. "
+            "negative for infinite")
         .default_value(timeout_ms)
         .scan<'i', int>()
         .metavar("INT");
@@ -138,13 +135,15 @@ auto main(int argc, char* argv[]) -> int {
         .help("read settings from file")
         .metavar("PATH");
     args_start.add_argument("-r", "--run")
-        .help("run a program afterwards. can "
-              "be used to run a hotkey setup app")
+        .help(
+            "run a program afterwards. can "
+            "be used to run a hotkey setup app")
         .metavar("PATH");
-    args_start.add_epilog("Keybind registration attempts will be "
-                          "blocked until terminated, timeout elapses, "
-                          "or stop signal is received, whichever happens "
-                          "first.");
+    args_start.add_epilog(
+        "Keybind registration attempts will be "
+        "blocked until terminated, timeout elapses, "
+        "or stop signal is received, whichever happens "
+        "first.");
 
     argparse::ArgumentParser args_stop(action_stop);
     args_stop.add_description("Unblock keybind registration attempts");
@@ -162,22 +161,21 @@ auto main(int argc, char* argv[]) -> int {
     try {
         args.parse_args(argc, argv);
     } catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
+        std::cerr << err.what() << '\n';
         return exit_argparse;
     }
 
     if (args.is_subcommand_used(args_start)) {
         if (is_window_active(window_desktop)) {
             std::cerr << "Can only block before explorer.exe "
-                         "is active."
-                      << std::endl;
+                         "is active.\n";
             return exit_explorer_exists;
         }
 
         auto server = Listener::create();
         if (!server) {
             std::cout << "Another instance is already blocking. "
-                      << "No need to block again." << std::endl;
+                      << "No need to block again.\n";
             return exit_ok;
         }
 
@@ -185,8 +183,7 @@ auto main(int argc, char* argv[]) -> int {
         if (args_start.present("--config")) {
             std::filesystem::path path = args_start.get("--config");
             if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \"" << path << "\""
-                          << std::endl;
+                std::cerr << "File not found at \"" << path << "\"\n";
                 return exit_file_not_found;
             }
             config = read_config(path);
@@ -213,66 +210,65 @@ auto main(int argc, char* argv[]) -> int {
                 parse_keybind("ctrl+alt+shift+win+n").value());
         }
 
-        std::cout << "Blocking keybinds." << std::endl;
+        std::cout << "Blocking keybinds.\n";
         auto blocker = Squatter::block(config.keyboard_shortcuts);
 
         auto timeout_ms = args_start.get<int>("--timeout");
 
-        std::cout << "Waiting for explorer.exe" << std::endl;
+        std::cout << "Waiting for explorer.exe\n";
         auto waited_ms = wait_until_window(window_desktop, timeout_ms);
         if (waited_ms < 0) {
-            std::cerr << "Timed out while waiting for explorer.exe."
-                      << std::endl;
+            std::cerr << "Timed out while waiting for explorer.exe.\n";
             return exit_timeout;
         }
 
-        std::cout << "Waiting until release signal or timeout." << std::endl;
+        std::cout << "Waiting until release signal or timeout.\n";
         while (waited_ms < timeout_ms && !server->poll()) {
             Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
             waited_ms += interval_ms;
         }
 
-        std::cout << "Unblocking keybinds." << std::endl;
+        std::cout << "Unblocking keybinds.\n";
         blocker.unblock();
 
         if (args_start.present("--run")) {
             std::filesystem::path path = args_start.get("--run");
             if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \"" << path << "\""
-                          << std::endl;
+                std::cerr << "File not found at \"" << path << "\"\n";
                 return exit_file_not_found;
             }
 
-            std::cout << "Running program at " << path << std::endl;
+            std::cout << "Running program at " << path << '\n';
 
             // always init COM before using ShellExecute()
             // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutea#remarks
             CoInitializeEx(
                 NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-            auto status = ShellExecuteW(
+            auto* status = ShellExecuteW(
                 NULL, wtos("Open").c_str(), path.c_str(), NULL, NULL, SW_HIDE);
         }
 
         return exit_ok;
-    } else if (args.is_subcommand_used(args_stop)) {
+    }
+
+    if (args.is_subcommand_used(args_stop)) {
         auto client = Client();
         if (!client.init()) {
-            std::cout << "Not blocking; no need to release." << std::endl;
+            std::cout << "Not blocking; no need to release.\n";
             return exit_ok;
         }
 
         if (!client.notify()) {
             std::cerr << "Failed to release keybinds. "
-                         "(Pipe communication failed.)"
-                      << std::endl;
+                         "(Pipe communication failed.)\n";
             return exit_connect_fail;
         }
 
         return exit_ok;
-    } else {
-        std::cerr << "Unrecognized subcommand." << std::endl;
-        return exit_argparse;
     }
+
+    std::cerr << "Unrecognized subcommand.\n";
+    return exit_argparse;
 }
 
 _Use_decl_annotations_ auto WINAPI WinMain(

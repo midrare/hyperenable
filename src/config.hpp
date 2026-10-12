@@ -5,8 +5,6 @@
 
 #include <windows.h> // must precede other windows headers
 
-#include "yaml.hpp"
-
 struct Config {
     std::vector<std::pair<int, int>> keyboard_shortcuts;
 };

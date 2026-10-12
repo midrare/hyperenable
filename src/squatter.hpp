@@ -2,8 +2,6 @@
 #define H3998501979
 
 #include <deque>
-#include <iostream>
-#include <string>
 #include <vector>
 
 // windows.h must come before other windows headers
@@ -33,9 +31,9 @@ public:
     auto unblock() -> void;
 
 private:
-    Squatter(const std::vector<std::pair<int, int>>& keys);
+    explicit Squatter(const std::vector<std::pair<int, int>>& keys);
 
-    void block(const int modifiers, const int key);
+    void block(int modifiers, int key);
 
     std::deque<int> hotkeys;
 };

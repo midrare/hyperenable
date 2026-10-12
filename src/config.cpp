@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <optional>
-#include <ranges>
 #include <regex>
 
 #include "config.hpp"
@@ -18,15 +17,14 @@ auto resplit(const std::string& s, const std::regex& sep)
 }
 
 void to_lower(std::string& s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
-        return std::tolower(c);
-    });
+    std::ranges::transform(
+        s, s.begin(), [](unsigned char c) -> int { return std::tolower(c); });
 }
 
 auto find(const std::multimap<int, std::string>& m, std::string s)
     -> std::optional<int> {
     to_lower(s);
-    for (auto& [vkey, keystr] : m) {
+    for (const auto& [vkey, keystr] : m) {
         if (s == keystr) {
             return vkey;
         }
@@ -43,7 +41,7 @@ auto parse_keybind(const std::string& s) -> std::optional<std::pair<int, int>> {
     int modifiers = 0;
     int keycode = 0;
 
-    auto segs = resplit(s, std::regex("\\s*\\+\\s*"));
+    auto segs = resplit(s, std::regex(R"(\s*\+\s*)"));
 
     for (auto& seg : segs) {
         auto modifier = find(modifier_keycode_to_str, seg);
