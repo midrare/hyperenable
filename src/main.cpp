@@ -22,7 +22,7 @@
 #include "wincon.hpp"
 
 const std::string program_name = "hyperenable";
-const std::string program_version = "0.1.3";
+const std::string program_version = "0.2.0";
 
 const LPCSTR window_taskbar = "Shell_TrayWnd";
 
