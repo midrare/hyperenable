@@ -123,7 +123,7 @@ auto main(int argc, char* argv[]) -> int {
         "Block default keybind registration attempts from Windows\n\n"
         "Windows reserves certain hotkeys for its own use. These include "
         "the Office key (win+shift+ctrl+alt) among many others. To unbind "
-        "these " +
+        "these, " +
         program_name +
         " starts before explorer.exe and "
         "registers them before Windows can, like a domain squatter. "
@@ -139,13 +139,16 @@ auto main(int argc, char* argv[]) -> int {
         .scan<'i', int>()
         .metavar("INT");
     args.add_argument("-c", "--config")
-        .help("read settings from file")
+        .help(
+            "read given config file that controls which keybinds are affected. "
+            "this allows you to control which of Windows default keybinds are "
+            "allowed and which ones " +
+            program_name + " unbinds for you.")
         .metavar("PATH");
     args.add_argument("--kill")
         .help(
-            "Unblock keybind registration attempts. "
-            "A signal will be sent to a running "
-            "instance of " +
+            "unblock keybind registration attempts. a signal will be sent "
+            "to a running instance of " +
             program_name +
             " to stop blocking keybinds. you normally do "
             "not need to call this yourself")
@@ -153,10 +156,9 @@ auto main(int argc, char* argv[]) -> int {
         .implicit_value(true)
         .nargs(0);
     args.add_epilog(
-        "Keybind registration attempts will be "
-        "blocked until terminated, timeout elapses, "
-        "or stop signal is received, whichever happens "
-        "first.");
+        "Keybind registration attempts will be blocked until " + program_name +
+        " is killed, timeout elapses, or stop signal is received, "
+        "whichever happens first.");
 
     try {
         args.parse_args(argc, argv);
