@@ -235,7 +235,7 @@ auto main(int argc, char* argv[]) -> int {
             parse_keybind("ctrl+win+l").value());
     }
 
-    std::cout << "Blocking keybinds.\n";
+    std::cout << "Acquiring keybinds.\n";
     auto blocker = Squatter::block(config.keyboard_shortcuts);
 
     auto timeout_ms = args.get<int>("--timeout") * 1000;
@@ -249,6 +249,14 @@ auto main(int argc, char* argv[]) -> int {
             break;
         }
         waited_ms += max(0, win_waited_ms);
+
+        MSG msg;
+        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_HOTKEY) {
+                std::cout << "Hotkey intercepted: 0x" << std::hex << msg.wParam
+                          << std::dec << '\n';
+            }
+        }
     }
 
     // explorer.exe started but might not have registered hotkeys yet
@@ -258,7 +266,7 @@ auto main(int argc, char* argv[]) -> int {
         Sleep(max(0, post_delay_ms));
     }
 
-    std::cout << "Unblocking keybinds.\n";
+    std::cout << "Releasing keybinds.\n";
     blocker.unblock();
 
     std::cout << "Exiting.\n";

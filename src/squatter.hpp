@@ -2,6 +2,7 @@
 #define H3998501979
 
 #include <deque>
+#include <tuple>
 #include <vector>
 
 // windows.h must come before other windows headers
@@ -35,7 +36,7 @@ private:
 
     void block(int modifiers, int key);
 
-    std::deque<int> hotkeys;
+    std::deque<std::tuple<int, int, int>> hotkeys;
 };
 
 #endif // H3998501979
