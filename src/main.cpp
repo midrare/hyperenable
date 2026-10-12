@@ -30,13 +30,8 @@ const LPCSTR window_taskbar = "Shell_TrayWnd";
 // that shows your recycling bin and desktop icons
 const LPCSTR window_desktop = "Progman";
 
-const std::string action_start = "start";
-const std::string action_stop = "stop";
-
-constexpr int timeout_ms = 15000;
 constexpr int bufsize = 1024;
 constexpr int interval_ms = 100;
-constexpr int post_delay_ms = 2000;
 
 constexpr int exit_ok = 0;
 constexpr int exit_timeout = 1;
@@ -122,36 +117,46 @@ auto wtos(const std::string& value) -> std::wstring {
 }
 
 auto main(int argc, char* argv[]) -> int {
-    argparse::ArgumentParser args_start(action_start);
-    args_start.add_description("Block keybind registration attempts");
-    args_start.add_argument("-t", "--timeout")
+    argparse::ArgumentParser args(
+        program_name, program_version, argparse::default_arguments::none);
+    args.add_description(
+        "Block default keybind registration attempts from Windows\n\n"
+        "Windows reserves certain hotkeys for its own use. These include "
+        "the Office key (win+shift+ctrl+alt) among many others. To unbind "
+        "these " +
+        program_name +
+        " starts before explorer.exe and "
+        "registers them before Windows can, like a domain squatter. "
+        "After " +
+        program_name +
+        " exits, these keybinds can then rebound "
+        "for your own use.");
+    args.add_argument("-t", "--timeout")
         .help(
-            "max milliseconds to wait for explorer.exe to load. "
-            "negative for infinite")
-        .default_value(timeout_ms)
+            "seconds to wait to for explorer.exe to load. negative waits "
+            "forever")
+        .default_value(30)
         .scan<'i', int>()
         .metavar("INT");
-    args_start.add_argument("-c", "--config")
+    args.add_argument("-c", "--config")
         .help("read settings from file")
         .metavar("PATH");
-    args_start.add_epilog(
+    args.add_argument("--kill")
+        .help(
+            "Unblock keybind registration attempts. "
+            "A signal will be sent to a running "
+            "instance of " +
+            program_name +
+            " to stop blocking keybinds. you normally do "
+            "not need to call this yourself")
+        .default_value(false)
+        .implicit_value(true)
+        .nargs(0);
+    args.add_epilog(
         "Keybind registration attempts will be "
         "blocked until terminated, timeout elapses, "
         "or stop signal is received, whichever happens "
         "first.");
-
-    argparse::ArgumentParser args_stop(action_stop);
-    args_stop.add_description("Unblock keybind registration attempts");
-    args_stop.add_epilog(
-        "A signal will be sent to a running "
-        "instance of " +
-        program_name +
-        " to stop "
-        "blocking keybinds.");
-
-    argparse::ArgumentParser args(program_name, program_version);
-    args.add_subparser(args_start);
-    args.add_subparser(args_stop);
 
     try {
         args.parse_args(argc, argv);
@@ -160,78 +165,12 @@ auto main(int argc, char* argv[]) -> int {
         return exit_argparse;
     }
 
-    if (args.is_subcommand_used(args_start)) {
-        if (is_window_active(window_desktop)) {
-            std::cerr << "Can only block before explorer.exe "
-                         "is active.\n";
-            return exit_explorer_exists;
-        }
-
-        auto server = Listener::create();
-        if (!server) {
-            std::cout << "Another instance is already blocking. "
-                      << "No need to block again.\n";
-            return exit_ok;
-        }
-
-        Config config;
-        if (args_start.present("--config")) {
-            std::filesystem::path path = args_start.get("--config");
-            if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \"" << path << "\"\n";
-                return exit_file_not_found;
-            }
-            config = read_config(path);
-        }
-
-        if (config.keyboard_shortcuts.empty()) {
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+w").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+t").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+y").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+o").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+p").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+d").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+l").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+x").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+alt+shift+win+n").value());
-            config.keyboard_shortcuts.push_back(
-                parse_keybind("ctrl+win+l").value());
-        }
-
-        std::cout << "Blocking keybinds.\n";
-        auto blocker = Squatter::block(config.keyboard_shortcuts);
-
-        auto timeout_ms = args_start.get<int>("--timeout");
-
-        std::cout << "Waiting for explorer.exe\n";
-        auto waited_ms = wait_until_window(window_desktop, timeout_ms);
-        if (waited_ms < 0) {
-            std::cerr << "Timed out while waiting for explorer.exe.\n";
-            return exit_timeout;
-        }
-
-        std::cout << "Waiting until release signal or timeout.\n";
-        while (waited_ms < timeout_ms && !server->poll()) {
-            Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
-            waited_ms += interval_ms;
-        }
-
-        std::cout << "Unblocking keybinds.\n";
-        blocker.unblock();
-
-        return exit_ok;
-    }
-
-    if (args.is_subcommand_used(args_stop)) {
+    if (args.get<bool>("--kill")) {
+        // check the pipe for a kill signal
+        // this is necessary because Windows provides no easy way to kill a
+        // process without flashing a console window
+        // we start in a hidden window by default so we can kill our own
+        // process safely
         auto client = Client();
         if (!client.init()) {
             std::cout << "Not blocking; no need to release.\n";
@@ -247,8 +186,74 @@ auto main(int argc, char* argv[]) -> int {
         return exit_ok;
     }
 
-    std::cerr << "Unrecognized subcommand.\n";
-    return exit_argparse;
+    if (is_window_active(window_desktop)) {
+        std::cerr << "Can only block before explorer.exe "
+                     "is active.\n";
+        return exit_explorer_exists;
+    }
+
+    auto server = Listener::create();
+    if (!server) {
+        std::cout << "Another instance is already blocking. "
+                  << "No need to block again.\n";
+        return exit_ok;
+    }
+
+    Config config;
+    if (args.present("--config")) {
+        std::filesystem::path path = args.get("--config");
+        if (!std::filesystem::exists(path)) {
+            std::cerr << "File not found at \"" << path << "\"\n";
+            return exit_file_not_found;
+        }
+        config = read_config(path);
+    }
+
+    if (config.keyboard_shortcuts.empty()) {
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+w").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+t").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+y").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+o").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+p").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+d").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+l").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+x").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+alt+shift+win+n").value());
+        config.keyboard_shortcuts.push_back(
+            parse_keybind("ctrl+win+l").value());
+    }
+
+    std::cout << "Blocking keybinds.\n";
+    auto blocker = Squatter::block(config.keyboard_shortcuts);
+
+    auto timeout_ms = args.get<int>("--timeout") * 1000;
+
+    std::cout << "Waiting for explorer.exe\n";
+    auto waited_ms = wait_until_window(window_desktop, timeout_ms);
+    if (waited_ms < 0) {
+        std::cerr << "Timed out while waiting for explorer.exe.\n";
+        return exit_timeout;
+    }
+
+    std::cout << "Waiting until release signal or timeout.\n";
+    while (waited_ms < timeout_ms && !server->poll()) {
+        Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
+        waited_ms += interval_ms;
+    }
+
+    std::cout << "Unblocking keybinds.\n";
+    blocker.unblock();
+
+    return exit_ok;
 }
 
 _Use_decl_annotations_ auto WINAPI WinMain(

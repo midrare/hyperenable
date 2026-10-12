@@ -111,9 +111,9 @@ function Write-Userinit([string]$Exe = $null) {
     If ($Exe) {
         $UserinitIdx = Get-ArrayItemIndex $UserinitArr "userinit\.exe"
         If ($UserinitIdx -lt 0) {
-            Add-ArrayItem ([ref]$UserinitArr) 0 """$Exe"" start"
+            Add-ArrayItem ([ref]$UserinitArr) 0 """$Exe"""
         } Else {
-            Add-ArrayItem ([ref]$UserinitArr) $UserinitIdx """$Exe"" start"
+            Add-ArrayItem ([ref]$UserinitArr) $UserinitIdx """$Exe"""
         }
     }
 
@@ -182,7 +182,7 @@ If ($Action -eq "install") {
 
 
     Write-Output "Writing $STARTUP_SHORTCUT"
-    Write-Shortcut $STARTUP_SHORTCUT $Destination 'stop'
+    Write-Shortcut $STARTUP_SHORTCUT $Destination '--kill'
 } ElseIf ($Action -eq "uninstall") {
     Write-Output "Deleting $Destination"
     Remove-Item -Path $Destination -Force -ErrorAction Ignore
