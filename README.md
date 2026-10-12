@@ -56,4 +56,4 @@ For an example config file, see `example_config.yaml` and read `keys.hpp`.
 
 ## Acknowledgements
 
-Concept based on [OfficeKeyFix](https://github.com/anthonyheddings/OfficeKeyFix).
+Concept based on [OfficeKeyFix](https://github.com/acook/OfficeKeyFix).
