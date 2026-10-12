@@ -203,6 +203,8 @@ auto main(int argc, char* argv[]) -> int {
                 parse_keybind("ctrl+alt+shift+win+x").value());
             config.keyboard_shortcuts.push_back(
                 parse_keybind("ctrl+alt+shift+win+n").value());
+            config.keyboard_shortcuts.push_back(
+                parse_keybind("ctrl+win+l").value());
         }
 
         std::cout << "Blocking keybinds.\n";
