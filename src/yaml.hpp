@@ -23,6 +23,8 @@
 *
 */
 
+// NOLINTBEGIN
+
 /*
 YAML documentation:
 http://yaml.org/spec/1.0/index.html
@@ -654,3 +656,5 @@ namespace Yaml
     void Serialize(const Node & root, std::string & string, const SerializeConfig & config = {2, 64, false, false});
 
 }
+
+// NOLINTEND

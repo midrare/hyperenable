@@ -23,6 +23,8 @@
 *
 */
 
+// NOLINTBEGIN
+
 #include "yaml.hpp"
 #include <memory>
 #include <fstream>
@@ -2768,6 +2770,6 @@ namespace Yaml
             found = input.find_first_of("\\", found + 1);
         }
     }
-
-
 }
+
+// NOLINTEND
