@@ -1,0 +1,7 @@
+.cache
+build
+.pdm-python
+*.lock
+*.lck
+*.temp
+*.tmp

@@ -1,0 +1,5 @@
+**/node_modules/**/*.py
+*.temp
+*.tmp
+.venv
+venv

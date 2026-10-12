@@ -1,3 +1,5 @@
+root = true
+
 [*]
 charset = utf-8
 indent_style = space
@@ -20,3 +22,7 @@ guidelines = 80
 indent_style = space
 indent_size = 2
 guidelines = 80
+
+[{*.mak,*.mk,GNUmakefile,Makefile,Makefile.*}]
+indent_style = tab
+

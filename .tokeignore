@@ -1,0 +1,8 @@
+/.hookspace
+/build
+/build-*
+/build_*
+/cmake-build
+/cmake-build-*
+/cmake_build_*
+/vcpkg_installed

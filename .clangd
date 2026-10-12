@@ -1,3 +1,11 @@
+---
+If:
+  PathMatch: '.*\.h|.*\.cpp|.*\.hpp|.*\.cxx|.*\.cc|.*\.ixx|.*\.cppm|.*\.cxxm|.*\.ccm|.*\.mpp'
+  PathExclude: '.*\.c'
 CompileFlags:
-    Add: [-std=c++20]
-    Remove: [-EH*, /EH*]
+  Add: [-std=c++20, -xc++]
+---
+If:
+  PathMatch: '.*\.c'
+CompileFlags:
+  Add: [-std=c17, -xc]

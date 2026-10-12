@@ -1,24 +1,27 @@
 ---
 Language: Cpp
 BasedOnStyle: LLVM
-BreakBeforeBraces: Attach
+AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
-AllowAllParametersOfDeclarationOnNextLine: true
 AlignArrayOfStructures: Right
-AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Inline
-BinPackArguments: true
-BinPackParameters: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Attach
 BreakBeforeTernaryOperators: true
 BreakStringLiterals: true
 ColumnLimit: 80
 CompactNamespaces: false
 Cpp11BracedListStyle: true
-IndentWidth: 4
-IndentAccessModifiers: false
-AccessModifierOffset: -4
 DerivePointerAlignment: false
+IndentAccessModifiers: false
+IndentPPDirectives: BeforeHash
+IndentWidth: 4
 PointerAlignment: Left
+SortIncludes: false
 ---
 Language: JavaScript
 BasedOnStyle: Google
