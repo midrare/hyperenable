@@ -73,8 +73,7 @@ auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
 // ---------------------------------------------------------------------------
 
 auto build_arg_parser() -> argparse::ArgumentParser {
-    argparse::ArgumentParser args(
-        program_name, program_version, argparse::default_arguments::none);
+    argparse::ArgumentParser args(program_name, program_version);
 
     args.add_description(
         "Block default keybind registration attempts from Windows\n\n"
