@@ -240,17 +240,15 @@ auto main(int argc, char* argv[]) -> int {
 
     auto timeout_ms = args.get<int>("--timeout") * 1000;
 
-    std::cout << "Waiting for explorer.exe\n";
-    auto waited_ms = wait_until_window(window_desktop, timeout_ms);
-    if (waited_ms < 0) {
-        std::cerr << "Timed out while waiting for explorer.exe.\n";
-        return exit_timeout;
-    }
-
-    std::cout << "Waiting until release signal or timeout.\n";
+    std::cout << "Waiting for explorer.exe until release signal or timeout.\n";
+    int64_t waited_ms = 0;
     while (waited_ms < timeout_ms && !server->poll()) {
-        Sleep(max(0, min(timeout_ms - waited_ms, interval_ms)));
-        waited_ms += interval_ms;
+        const auto win_waited_ms =
+            wait_until_window(window_desktop, interval_ms);
+        if (win_waited_ms < 0) {
+            break;
+        }
+        waited_ms += max(0, win_waited_ms);
     }
 
     // explorer.exe started but might not have registered hotkeys yet
