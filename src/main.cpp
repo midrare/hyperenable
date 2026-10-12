@@ -36,7 +36,7 @@ const std::string action_stop = "stop";
 constexpr int timeout_ms = 15000;
 constexpr int bufsize = 1024;
 constexpr int interval_ms = 100;
-constexpr int delay_ms = 0;
+constexpr int post_delay_ms = 2000;
 
 constexpr int exit_ok = 0;
 constexpr int exit_timeout = 1;
@@ -134,11 +134,6 @@ auto main(int argc, char* argv[]) -> int {
     args_start.add_argument("-c", "--config")
         .help("read settings from file")
         .metavar("PATH");
-    args_start.add_argument("-r", "--run")
-        .help(
-            "run a program afterwards. can "
-            "be used to run a hotkey setup app")
-        .metavar("PATH");
     args_start.add_epilog(
         "Keybind registration attempts will be "
         "blocked until terminated, timeout elapses, "
@@ -230,23 +225,6 @@ auto main(int argc, char* argv[]) -> int {
 
         std::cout << "Unblocking keybinds.\n";
         blocker.unblock();
-
-        if (args_start.present("--run")) {
-            std::filesystem::path path = args_start.get("--run");
-            if (!std::filesystem::exists(path)) {
-                std::cerr << "File not found at \"" << path << "\"\n";
-                return exit_file_not_found;
-            }
-
-            std::cout << "Running program at " << path << '\n';
-
-            // always init COM before using ShellExecute()
-            // https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutea#remarks
-            CoInitializeEx(
-                NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-            auto* status = ShellExecuteW(
-                NULL, wtos("Open").c_str(), path.c_str(), NULL, NULL, SW_HIDE);
-        }
 
         return exit_ok;
     }
