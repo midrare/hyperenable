@@ -1,3 +1,4 @@
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -7,10 +8,8 @@
 // windows.h must come first
 #include <windows.h>
 
-#include <combaseapi.h>
-#include <fileapi.h>
 #include <handleapi.h>
-#include <shellapi.h>
+#include <synchapi.h>
 #include <winuser.h>
 
 #include "argparse.hpp"
@@ -19,28 +18,38 @@
 #include "squatter.hpp"
 #include "wincon.hpp"
 
+// ---------------------------------------------------------------------------
+// constants
+// ---------------------------------------------------------------------------
+
 const std::string program_name = "hyperenable";
 const std::string program_version = "0.2.0";
 
-const LPCSTR window_taskbar = "Shell_TrayWnd";
-
-const LPCSTR mutex_name = "Local\\hyperenable_SingleInstance";
-const LPCSTR event_name = "Local\\hyperenable_QuitEvent";
-
-// class that designates the desktop. this is the borderless window
-// that shows your recycling bin and desktop icons
-const LPCSTR window_desktop = "Progman";
-
-constexpr int bufsize = 1024;
-constexpr int interval_ms = 100;
-constexpr int post_delay_ms = 1000;
-
+// process exit codes
 constexpr int exit_ok = 0;
 constexpr int exit_timeout = 1;
 constexpr int exit_explorer_exists = 2;
 constexpr int exit_file_not_found = 3;
 constexpr int exit_connect_fail = 4;
 constexpr int exit_argparse = 5;
+
+// explorer.exe window classes. represents the borderless surface
+// the desktop icons appear on; it only exists once explorer.exe is running
+const LPCSTR window_desktop = "Progman";
+
+// named kernel objects shared between invocations
+// mutex marks that an instance is already blocking
+// event tells the blocking instance to stop
+const LPCSTR mutex_name = "Local\\hyperenable_SingleInstance";
+const LPCSTR event_name = "Local\\hyperenable_QuitEvent";
+
+constexpr int bufsize = 1024;
+constexpr int interval_ms = 100;
+constexpr int post_delay_ms = 1000;
+
+// ---------------------------------------------------------------------------
+// win32 helpers
+// ---------------------------------------------------------------------------
 
 auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
     auto* explorer = FindWindow(win, NULL);
@@ -49,9 +58,8 @@ auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
     }
 
     if (req_text) {
-        std::size_t read_len = 0;
         std::array<char, bufsize> buf{};
-        read_len = GetWindowText(explorer, buf.data(), buf.size());
+        std::size_t read_len = GetWindowText(explorer, buf.data(), buf.size());
         if (read_len <= 0) {
             return false;
         }
@@ -60,28 +68,14 @@ auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
     return true;
 }
 
-/* wtos() is from https://stackoverflow.com/a/67134110
- * https://stackoverflow.com/users/870239/liang-august-yuning
- * CC BY-SA 4.0
- */
-auto wtos(const std::string& value) -> std::wstring {
-    const size_t cSize = value.size() + 1;
+// ---------------------------------------------------------------------------
+// command line
+// ---------------------------------------------------------------------------
 
-    std::wstring wc;
-    wc.resize(cSize);
-
-    size_t cSize1 = 0;
-    mbstowcs_s(
-        &cSize1, static_cast<wchar_t*>(&wc[0]), cSize, value.c_str(), cSize);
-
-    wc.pop_back();
-
-    return wc;
-}
-
-auto main(int argc, char* argv[]) -> int {
+auto build_arg_parser() -> argparse::ArgumentParser {
     argparse::ArgumentParser args(
         program_name, program_version, argparse::default_arguments::none);
+
     args.add_description(
         "Block default keybind registration attempts from Windows\n\n"
         "Windows reserves certain hotkeys for its own use. These include "
@@ -123,104 +117,102 @@ auto main(int argc, char* argv[]) -> int {
         " is killed, timeout elapses, or stop signal is received, "
         "whichever happens first.");
 
-    try {
-        args.parse_args(argc, argv);
-    } catch (const std::runtime_error& err) {
-        std::cerr << err.what() << '\n';
-        return exit_argparse;
+    return args;
+}
+
+// ---------------------------------------------------------------------------
+// other instances
+// ---------------------------------------------------------------------------
+
+auto signal_running_instance() -> void {
+    HANDLE event = OpenEventA(EVENT_MODIFY_STATE, FALSE, event_name);
+    if (event != NULL) {
+        SetEvent(event);
+        CloseHandle(event);
+        event = NULL;
     }
+}
 
-    if (args.get<bool>("--kill")) {
-        // check a kill signal
-        // this is necessary because Windows provides no easy way to kill a
-        // process without flashing a console window
-        // we start in a hidden window by default so we can kill our own
-        // process safely
-        HANDLE event = OpenEventA(EVENT_MODIFY_STATE, FALSE, event_name);
-        if (event) {
-            SetEvent(event);
-            CloseHandle(event);
-            event = NULL;
-        }
-
-        return exit_ok;
-    }
-
-    if (is_window_active(window_desktop)) {
-        std::cerr << "Can only block before explorer.exe "
-                     "is active.\n";
-        return exit_explorer_exists;
-    }
-
-    HANDLE mutex = CreateMutexA(nullptr, TRUE, mutex_name);
-    if (!mutex || GetLastError() == ERROR_ALREADY_EXISTS) {
+auto acquire_instance_mutex() -> HANDLE {
+    HANDLE mutex = CreateMutexA(NULL, TRUE, mutex_name);
+    if (mutex == NULL || GetLastError() == ERROR_ALREADY_EXISTS) {
         std::cout << "Another instance is already blocking. "
                   << "No need to block again.\n";
-        if (mutex) {
+        if (mutex != NULL) {
             CloseHandle(mutex);
-            mutex = NULL;
         }
-        return exit_ok;
+        return NULL;
     }
 
+    return mutex;
+}
+
+auto create_quit_event() -> HANDLE {
+    HANDLE event = CreateEventA(NULL, TRUE, FALSE, event_name);
+    if (event == NULL) {
+        std::cerr << "Failed to create quit event.\n";
+    }
+
+    return event;
+}
+
+// ---------------------------------------------------------------------------
+// keybinds
+// ---------------------------------------------------------------------------
+
+auto default_keybinds() -> std::vector<std::pair<int, int>> {
+    return {
+        parse_keybind("ctrl+alt+shift+win+w").value(),
+        parse_keybind("ctrl+alt+shift+win+t").value(),
+        parse_keybind("ctrl+alt+shift+win+y").value(),
+        parse_keybind("ctrl+alt+shift+win+o").value(),
+        parse_keybind("ctrl+alt+shift+win+p").value(),
+        parse_keybind("ctrl+alt+shift+win+d").value(),
+        parse_keybind("ctrl+alt+shift+win+l").value(),
+        parse_keybind("ctrl+alt+shift+win+x").value(),
+        parse_keybind("ctrl+alt+shift+win+n").value(),
+        parse_keybind("ctrl+win+l").value(),
+    };
+}
+
+auto load_config(const argparse::ArgumentParser& args)
+    -> std::optional<Config> {
     Config config;
+
     if (args.present("--config")) {
         std::filesystem::path path = args.get("--config");
         if (!std::filesystem::exists(path)) {
             std::cerr << "File not found at \"" << path << "\"\n";
-            return exit_file_not_found;
+            return std::nullopt;
         }
         config = read_config(path);
     }
 
     if (config.keyboard_shortcuts.empty()) {
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+w").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+t").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+y").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+o").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+p").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+d").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+l").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+x").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+alt+shift+win+n").value());
-        config.keyboard_shortcuts.push_back(
-            parse_keybind("ctrl+win+l").value());
+        config.keyboard_shortcuts = default_keybinds();
     }
 
-    HANDLE quit_event = CreateEventA(NULL, TRUE, FALSE, event_name);
-    ResetEvent(quit_event);
-    if (!quit_event) {
-        std::cerr << "Failed to create quit event.\n";
-        ReleaseMutex(mutex);
-        CloseHandle(mutex);
-        mutex = NULL;
-        return exit_connect_fail;
+    return config;
+}
+
+// ---------------------------------------------------------------------------
+// blocking run
+// ---------------------------------------------------------------------------
+
+auto print_intercepted_hotkey() -> void {
+    MSG msg;
+    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) && msg.message == WM_HOTKEY) {
+        std::cout << "Hotkey intercepted: 0x" << std::hex << msg.wParam
+                  << std::dec << '\n';
     }
+}
 
-    std::cout << "Acquiring keybinds.\n";
-    auto blocker = Squatter::block(config.keyboard_shortcuts);
-
-    auto timeout_ms = args.get<int>("--timeout") * 1000;
-
+auto wait_for_explorer(HANDLE quit_event, int64_t timeout_ms) -> void {
     std::cout << "Waiting for explorer.exe until release signal or timeout.\n";
+
     int64_t waited_ms = 0;
     while (waited_ms < timeout_ms && !is_window_active(window_desktop)) {
-        MSG msg;
-        if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_HOTKEY) {
-                std::cout << "Hotkey intercepted: 0x" << std::hex << msg.wParam
-                          << std::dec << '\n';
-            }
-        }
+        print_intercepted_hotkey();
 
         if (WaitForSingleObject(quit_event, 0) == WAIT_OBJECT_0) {
             std::cout << "Quit event received.\n";
@@ -233,10 +225,58 @@ auto main(int argc, char* argv[]) -> int {
 
     std::cout << "Waited " << waited_ms << "ms / " << timeout_ms << "ms.\n";
     std::cout << "Explorer state: " << is_window_active(window_desktop) << "\n";
+}
+
+// ---------------------------------------------------------------------------
+// entry points
+// ---------------------------------------------------------------------------
+
+auto main(int argc, char* argv[]) -> int {
+    auto args = build_arg_parser();
+
+    try {
+        args.parse_args(argc, argv);
+    } catch (const std::runtime_error& err) {
+        std::cerr << err.what() << '\n';
+        return exit_argparse;
+    }
+
+    if (args.get<bool>("--kill")) {
+        signal_running_instance();
+        return exit_ok;
+    }
+
+    // blocking only works before explorer.exe registers its own hotkeys
+    if (is_window_active(window_desktop)) {
+        std::cerr << "Can only block before explorer.exe is active.\n";
+        return exit_explorer_exists;
+    }
+
+    HANDLE mutex = acquire_instance_mutex();
+    if (mutex == NULL) {
+        return exit_ok;
+    }
+
+    auto config = load_config(args);
+    if (!config) {
+        return exit_file_not_found;
+    }
+
+    HANDLE quit_event = create_quit_event();
+    if (quit_event == NULL) {
+        ReleaseMutex(mutex);
+        CloseHandle(mutex);
+        return exit_connect_fail;
+    }
+
+    std::cout << "Acquiring keybinds.\n";
+    auto blocker = Squatter::block(config->keyboard_shortcuts);
+
+    const auto timeout_ms = args.get<int>("--timeout") * 1000;
+    wait_for_explorer(quit_event, timeout_ms);
 
     // explorer.exe started but might not have registered hotkeys yet
-    // safety wait so its attempt can fail while we still hold those
-    // hotkeys
+    // wait so its attempt can fail while we still hold those hotkeys
     if (post_delay_ms > 0) {
         std::cout << "Delaying " << post_delay_ms << "ms.\n";
         Sleep(max(0, post_delay_ms));
@@ -246,12 +286,9 @@ auto main(int argc, char* argv[]) -> int {
     blocker.unblock();
 
     std::cout << "Closing quit event.\n";
-    ResetEvent(quit_event);
     CloseHandle(quit_event);
-    quit_event = NULL;
     ReleaseMutex(mutex);
     CloseHandle(mutex);
-    mutex = NULL;
 
     std::cout << "Exiting.\n";
     return exit_ok;
