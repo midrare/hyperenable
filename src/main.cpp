@@ -1,6 +1,5 @@
 #include <filesystem>
 #include <iostream>
-#include <limits>
 #include <optional>
 #include <stdexcept>
 #include <vector>
@@ -17,7 +16,6 @@
 #include "argparse.hpp"
 #include "config.hpp"
 #include "main.hpp"
-#include "pipe.hpp"
 #include "squatter.hpp"
 #include "wincon.hpp"
 
@@ -25,6 +23,9 @@ const std::string program_name = "hyperenable";
 const std::string program_version = "0.2.0";
 
 const LPCSTR window_taskbar = "Shell_TrayWnd";
+
+const LPCSTR mutex_name = "Local\\hyperenable_SingleInstance";
+const LPCSTR event_name = "Local\\hyperenable_QuitEvent";
 
 // class that designates the desktop. this is the borderless window
 // that shows your recycling bin and desktop icons
@@ -57,45 +58,6 @@ auto is_window_active(const LPCSTR win, const bool req_text) -> bool {
     }
 
     return true;
-}
-
-auto wait_until_window(const LPCSTR win, const int timeout_ms, const bool text)
-    -> int {
-    int waited_ms = 0;
-    HWND explorer = NULL;
-
-    do {
-        explorer = FindWindow(win, NULL);
-        if (explorer == NULL) {
-            auto wait_ms = min(interval_ms, timeout_ms - waited_ms);
-            Sleep(max(0, wait_ms));
-            waited_ms += wait_ms;
-        }
-    } while (explorer == NULL && (timeout_ms < 0 || waited_ms < timeout_ms));
-
-    if (explorer == NULL) {
-        return -1;
-    }
-
-    if (text) {
-        std::size_t read_len = 0;
-
-        do {
-            std::array<char, bufsize> buf{};
-            read_len = GetWindowText(explorer, buf.data(), buf.size());
-
-            if (read_len <= 0) {
-                Sleep(max(0, min(interval_ms, timeout_ms - waited_ms)));
-                waited_ms += interval_ms;
-            }
-        } while (read_len <= 0 && (timeout_ms < 0 || waited_ms < timeout_ms));
-
-        if (read_len <= 0) {
-            return -1;
-        }
-    }
-
-    return min((std::numeric_limits<int>::max)(), waited_ms);
 }
 
 /* wtos() is from https://stackoverflow.com/a/67134110
@@ -169,21 +131,16 @@ auto main(int argc, char* argv[]) -> int {
     }
 
     if (args.get<bool>("--kill")) {
-        // check the pipe for a kill signal
+        // check a kill signal
         // this is necessary because Windows provides no easy way to kill a
         // process without flashing a console window
         // we start in a hidden window by default so we can kill our own
         // process safely
-        auto client = Client();
-        if (!client.init()) {
-            std::cout << "Not blocking; no need to release.\n";
-            return exit_ok;
-        }
-
-        if (!client.notify()) {
-            std::cerr << "Failed to release keybinds. "
-                         "(Pipe communication failed.)\n";
-            return exit_connect_fail;
+        HANDLE event = OpenEventA(EVENT_MODIFY_STATE, FALSE, event_name);
+        if (event) {
+            SetEvent(event);
+            CloseHandle(event);
+            event = NULL;
         }
 
         return exit_ok;
@@ -195,10 +152,14 @@ auto main(int argc, char* argv[]) -> int {
         return exit_explorer_exists;
     }
 
-    auto server = Listener::create();
-    if (!server) {
+    HANDLE mutex = CreateMutexA(nullptr, TRUE, mutex_name);
+    if (!mutex || GetLastError() == ERROR_ALREADY_EXISTS) {
         std::cout << "Another instance is already blocking. "
                   << "No need to block again.\n";
+        if (mutex) {
+            CloseHandle(mutex);
+            mutex = NULL;
+        }
         return exit_ok;
     }
 
@@ -235,6 +196,16 @@ auto main(int argc, char* argv[]) -> int {
             parse_keybind("ctrl+win+l").value());
     }
 
+    HANDLE quit_event = CreateEventA(NULL, TRUE, FALSE, event_name);
+    ResetEvent(quit_event);
+    if (!quit_event) {
+        std::cerr << "Failed to create quit event.\n";
+        ReleaseMutex(mutex);
+        CloseHandle(mutex);
+        mutex = NULL;
+        return exit_connect_fail;
+    }
+
     std::cout << "Acquiring keybinds.\n";
     auto blocker = Squatter::block(config.keyboard_shortcuts);
 
@@ -242,14 +213,7 @@ auto main(int argc, char* argv[]) -> int {
 
     std::cout << "Waiting for explorer.exe until release signal or timeout.\n";
     int64_t waited_ms = 0;
-    while (waited_ms < timeout_ms && !server->poll()) {
-        const auto win_waited_ms =
-            wait_until_window(window_desktop, interval_ms);
-        if (win_waited_ms < 0) {
-            break;
-        }
-        waited_ms += max(0, win_waited_ms);
-
+    while (waited_ms < timeout_ms && !is_window_active(window_desktop)) {
         MSG msg;
         if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_HOTKEY) {
@@ -257,17 +221,37 @@ auto main(int argc, char* argv[]) -> int {
                           << std::dec << '\n';
             }
         }
+
+        if (WaitForSingleObject(quit_event, 0) == WAIT_OBJECT_0) {
+            std::cout << "Quit event received.\n";
+            break;
+        }
+
+        Sleep(max(0, interval_ms));
+        waited_ms += max(0, interval_ms);
     }
+
+    std::cout << "Waited " << waited_ms << "ms / " << timeout_ms << "ms.\n";
+    std::cout << "Explorer state: " << is_window_active(window_desktop) << "\n";
 
     // explorer.exe started but might not have registered hotkeys yet
     // safety wait so its attempt can fail while we still hold those
     // hotkeys
     if (post_delay_ms > 0) {
+        std::cout << "Delaying " << post_delay_ms << "ms.\n";
         Sleep(max(0, post_delay_ms));
     }
 
     std::cout << "Releasing keybinds.\n";
     blocker.unblock();
+
+    std::cout << "Closing quit event.\n";
+    ResetEvent(quit_event);
+    CloseHandle(quit_event);
+    quit_event = NULL;
+    ReleaseMutex(mutex);
+    CloseHandle(mutex);
+    mutex = NULL;
 
     std::cout << "Exiting.\n";
     return exit_ok;

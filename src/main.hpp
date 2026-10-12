@@ -6,7 +6,6 @@
 #include <windows.h>
 
 auto is_window_active(LPCSTR win, bool req_text = true) -> bool;
-auto wait_until_window(LPCSTR win, int timeout_ms, bool text = true) -> int;
 auto wtos(const std::string& value) -> std::wstring;
 
 #endif // H9138789750
