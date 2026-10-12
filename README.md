@@ -46,6 +46,8 @@ To use any of these CLI options, you need to edit the registry key at `HKLM:\SOF
 
 For an example config file, see `example_config.yaml` and read `keys.hpp`.
 
+To rebind the freed hotkeys for yourself, you need to make sure `hyperenable.exe` has fully exited before rebinding.
+
 ## Building
 
 1. Install Visual Studio 2022. Make sure to include MSVC C++ x64/x86 build tools

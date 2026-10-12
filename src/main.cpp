@@ -32,6 +32,7 @@ const LPCSTR window_desktop = "Progman";
 
 constexpr int bufsize = 1024;
 constexpr int interval_ms = 100;
+constexpr int post_delay_ms = 1000;
 
 constexpr int exit_ok = 0;
 constexpr int exit_timeout = 1;
@@ -252,9 +253,17 @@ auto main(int argc, char* argv[]) -> int {
         waited_ms += interval_ms;
     }
 
+    // explorer.exe started but might not have registered hotkeys yet
+    // safety wait so its attempt can fail while we still hold those
+    // hotkeys
+    if (post_delay_ms > 0) {
+        Sleep(max(0, post_delay_ms));
+    }
+
     std::cout << "Unblocking keybinds.\n";
     blocker.unblock();
 
+    std::cout << "Exiting.\n";
     return exit_ok;
 }
 
